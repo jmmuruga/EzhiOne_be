@@ -1,0 +1,30 @@
+{
+  "name": "be-ezhione",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/main.ts",
+    "dev": "nodemon src/main.ts",
+    "build": "rimraf ./build &&tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mssql": "^7.3.5",
+    "mysql2": "^2.3.3",
+    "typeorm": "^0.3.26"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
