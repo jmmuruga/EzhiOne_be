@@ -7,6 +7,7 @@ dotenv.config(); // load env variables FIRST
 import './core/dataBase/db'; // then connect to DB
 
 import cors from 'cors';
+import itemMasterRouter from './api/itemMaster/itemMaster.controller';
 
 const app = express();
 
@@ -20,6 +21,10 @@ const corsOptions = {
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
+
 app.use(cors(corsOptions));
+app.use("/itemMaster", cors(corsOptions), itemMasterRouter);
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
+
+

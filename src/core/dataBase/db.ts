@@ -1,9 +1,10 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { DataSource } from "typeorm";
+import { itemMaster } from "../../api/itemMaster/itemMaster.model";
 
 const Entities = [
-
+  itemMaster
 ]
 
 export const appSource = new DataSource({
@@ -22,7 +23,7 @@ export const appSource = new DataSource({
   },
 });
 
- appSource
+appSource
   .initialize()
   .then((res) => console.log("SQL Server Connected"))
   .catch((error) => console.log(error, "Error while connecting to DB"));
