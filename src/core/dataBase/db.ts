@@ -2,9 +2,17 @@ import "dotenv/config";
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { itemMaster } from "../../api/itemMaster/itemMaster.model";
+import { companyRegistration } from "../../api/companyRegistration/companyRegistration.model";
+import { unitOfMeasurement } from "../../api/unitOfMeasurement/unitofMeasurement.model";
+import { ItemGroupCategory } from "../../api/itemGrouping-Categorization/itemGroupCategory.model";
+import { FinancialYearCreation } from "../../api/financialYearCreation/financialYearCreation.model";
 
 const Entities = [
-  itemMaster
+  itemMaster,
+  companyRegistration,
+  unitOfMeasurement,
+  ItemGroupCategory,
+  FinancialYearCreation,
 ]
 
 export const appSource = new DataSource({

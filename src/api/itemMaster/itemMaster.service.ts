@@ -104,11 +104,11 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
 export const getItemMasterDetails = async (req: Request, res: Response) => {
     try {
         const itemMasterRepository = appSource.getRepository(itemMaster);
-        const companies = await itemMasterRepository
+        const itemmaster = await itemMasterRepository
             .createQueryBuilder("")
             .getMany();
         res.status(200).send({
-            Result: companies,
+            Result: itemmaster,
         });
     } catch (error) {
         if (error instanceof ValidationException) {

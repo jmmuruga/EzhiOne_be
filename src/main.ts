@@ -8,6 +8,9 @@ import './core/dataBase/db'; // then connect to DB
 
 import cors from 'cors';
 import itemMasterRouter from './api/itemMaster/itemMaster.controller';
+import companyRegistrationRouter from './api/companyRegistration/companyRegistration.controller';
+import unitMeasuremtRouter from './api/unitOfMeasurement/unitofMeasurement.controller';
+import itemGroupCategoryRouter from './api/itemGrouping-Categorization/itemGroupCategory.controller';
 
 const app = express();
 
@@ -23,7 +26,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
 app.use("/itemMaster", cors(corsOptions), itemMasterRouter);
+app.use('/companyRegistrationRouter', cors(corsOptions), companyRegistrationRouter);
+app.use('/unitMeasuremtRouter', cors(corsOptions), unitMeasuremtRouter);
+app.use('/itemGroupCategoryRouter', cors(corsOptions), itemGroupCategoryRouter)
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 
