@@ -49,7 +49,6 @@ export const addUpdateCompanyRegistration = async (
             companyId: payload.companyId,
         });
         if (existingDetails) {
-            // console.log(existingDetails , 'edit')
             const companyNameAndBranchValidation =
                 await companyRegistrationRepositry.findOneBy({
                     companyName: payload.companyName,
@@ -209,9 +208,7 @@ export const deleteCompany = async (req: Request, res: Response) => {
         const companyRepository = appSource.getRepository(companyRegistration);
 
         // Check if company exists
-        console.log("Deleting companyId:", companyId);
         const companyFound = await companyRepository.findOneBy({ companyId });
-        console.log("Found Company:", companyFound);
         if (!companyFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -224,7 +221,6 @@ export const deleteCompany = async (req: Request, res: Response) => {
             .where("companyId = :companyId", { companyId: String(companyId) })
             .execute();
 
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -238,7 +234,6 @@ export const deleteCompany = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

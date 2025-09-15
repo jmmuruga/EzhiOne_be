@@ -1,23 +1,25 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class unitOfMeasurement {
+export class OtpPinSetting {
     @PrimaryGeneratedColumn()
     id: string
     @Column()
-    unitMeasurementId: string
+    otpPinId: string
     @Column()
-    unitShort: string
+    addPin: string
     @Column()
-    unitName: string
-    @Column({ default: true })
+    editPin: string
+    @Column()
+    deletePin: string
+    @Column()
     status: boolean
     @Column({ 'nullable': true })
     cuid: string
     @Column({ 'nullable': true })
     muid: string
     @CreateDateColumn()
-    created_at: Date;
+    created_at: Date
     @UpdateDateColumn()
-    updated_at: Date;
+    updated_at: Date
 }

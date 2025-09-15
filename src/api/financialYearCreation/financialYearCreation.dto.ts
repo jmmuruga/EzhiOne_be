@@ -23,5 +23,6 @@ export const financialYearCreationValidation = Joi.object({
     fromDate: Joi.string().required(),
     toDate: Joi.string().required(),
     status: Joi.boolean().optional(),
-
+    cuid: Joi.string().optional(),
+    muid: Joi.string().optional(),
 })

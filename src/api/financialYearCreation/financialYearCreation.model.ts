@@ -1,16 +1,20 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class unitOfMeasurement {
+export class FinancialYearCreation {
     @PrimaryGeneratedColumn()
-    id: string
+    id: string;
     @Column()
-    unitMeasurementId: string
+    financialYearId: string
     @Column()
-    unitShort: string
+    companyName: string
     @Column()
-    unitName: string
-    @Column({ default: true })
+    financialYear: string
+    @Column()
+    fromDate: string
+    @Column()
+    toDate: string
+    @Column()
     status: boolean
     @Column({ 'nullable': true })
     cuid: string

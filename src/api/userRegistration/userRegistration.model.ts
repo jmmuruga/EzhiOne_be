@@ -1,23 +1,31 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class unitOfMeasurement {
+export class UserDetails {
     @PrimaryGeneratedColumn()
-    id: string
+    newId: number;
     @Column()
-    unitMeasurementId: string
+    userId: string
     @Column()
-    unitShort: string
+    userName: string
     @Column()
-    unitName: string
-    @Column({ default: true })
+    Email: string
+    @Column()
+    Mobile: string
+    @Column()
+    userType: string
+    @Column()
+    password: string
+    @Column()
+    confirmpassword: string
+    @Column()
     status: boolean
     @Column({ 'nullable': true })
     cuid: string
     @Column({ 'nullable': true })
     muid: string
     @CreateDateColumn()
-    created_at: Date;
+    created_at: Date
     @UpdateDateColumn()
-    updated_at: Date;
+    updated_at: Date
 }

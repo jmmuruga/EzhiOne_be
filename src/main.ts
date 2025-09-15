@@ -11,6 +11,10 @@ import itemMasterRouter from './api/itemMaster/itemMaster.controller';
 import companyRegistrationRouter from './api/companyRegistration/companyRegistration.controller';
 import unitMeasuremtRouter from './api/unitOfMeasurement/unitofMeasurement.controller';
 import itemGroupCategoryRouter from './api/itemGrouping-Categorization/itemGroupCategory.controller';
+import financialYearRouter from './api/financialYearCreation/financialYearCreation.controller';
+import otpPinRouter from './api/otpPinSetting/otpPinSetting.controller';
+import userDetailsRouter from './api/userRegistration/userRegistration.controller';
+import employeeRouter from './api/employeeRegistration/employee.controller';
 
 const app = express();
 
@@ -30,7 +34,11 @@ app.use(cors(corsOptions));
 app.use("/itemMaster", cors(corsOptions), itemMasterRouter);
 app.use('/companyRegistrationRouter', cors(corsOptions), companyRegistrationRouter);
 app.use('/unitMeasuremtRouter', cors(corsOptions), unitMeasuremtRouter);
-app.use('/itemGroupCategoryRouter', cors(corsOptions), itemGroupCategoryRouter)
+app.use('/itemGroupCategoryRouter', cors(corsOptions), itemGroupCategoryRouter);
+app.use('/financialYearRouter', cors(corsOptions), financialYearRouter);
+app.use('/otpPinRouter', cors(corsOptions), otpPinRouter);
+app.use('/userDetailsRouter', cors(corsOptions), userDetailsRouter);
+app.use('/employeeRouter', cors(corsOptions), employeeRouter)
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 

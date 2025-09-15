@@ -6,6 +6,9 @@ import { companyRegistration } from "../../api/companyRegistration/companyRegist
 import { unitOfMeasurement } from "../../api/unitOfMeasurement/unitofMeasurement.model";
 import { ItemGroupCategory } from "../../api/itemGrouping-Categorization/itemGroupCategory.model";
 import { FinancialYearCreation } from "../../api/financialYearCreation/financialYearCreation.model";
+import { OtpPinSetting } from "../../api/otpPinSetting/otpPinSetting.model";
+import { UserDetails } from "../../api/userRegistration/userRegistration.model";
+import { employeeRegistration } from "../../api/employeeRegistration/employee.model";
 
 const Entities = [
   itemMaster,
@@ -13,6 +16,9 @@ const Entities = [
   unitOfMeasurement,
   ItemGroupCategory,
   FinancialYearCreation,
+  OtpPinSetting,
+  UserDetails,
+  employeeRegistration,
 ]
 
 export const appSource = new DataSource({
