@@ -39,7 +39,6 @@ export const addUpdateEmployeeRegistration = async (
 ) => {
     try {
         const payload: employeeRegistration = req.body;
-        console.log(payload, "payload");
         const validation = employeeRegistrationValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);

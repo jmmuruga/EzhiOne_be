@@ -16,7 +16,7 @@ export interface EmployeeRegistrationDto {
     designation: string;
     monthlySalary: string;
     workStatus: string;
-    employeeAddress: string;
+    empAddress: string;
     employeeImage?: string;
     status?: boolean;
     cuid?: string;
@@ -45,7 +45,7 @@ export const employeeRegistrationValidation = Joi.object({
     monthlySalary: Joi.string().required(),
     workStatus: Joi.string().required(),
     empAddress: Joi.string().required(),
-    employeeImage: Joi.string().allow(null, ''),
+    employeeImage: Joi.string().optional().allow(null, ''),
     status: Joi.boolean(),
     cuid: Joi.string().allow(null, ''),
     muid: Joi.string().allow(null, ''),

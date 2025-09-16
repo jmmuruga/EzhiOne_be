@@ -9,6 +9,8 @@ import { FinancialYearCreation } from "../../api/financialYearCreation/financial
 import { OtpPinSetting } from "../../api/otpPinSetting/otpPinSetting.model";
 import { UserDetails } from "../../api/userRegistration/userRegistration.model";
 import { employeeRegistration } from "../../api/employeeRegistration/employee.model";
+import { Brand } from "../../api/brand/brand.model";
+import { newCustomer } from "../../api/newCustomer/newCustomer.model";
 
 const Entities = [
   itemMaster,
@@ -19,6 +21,8 @@ const Entities = [
   OtpPinSetting,
   UserDetails,
   employeeRegistration,
+  Brand,
+  newCustomer
 ]
 
 export const appSource = new DataSource({

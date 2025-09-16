@@ -9,7 +9,7 @@ import {
 @Entity()
 export class employeeRegistration {
     @PrimaryGeneratedColumn()
-    id: string;
+    newId: number;
     @Column()
     employeeId: string;
     @Column()
@@ -41,7 +41,7 @@ export class employeeRegistration {
     @Column()
     workStatus: string;
     @Column()
-    employeeAddress: string;
+    empAddress: string;
     @Column({ type: "ntext", nullable: true })
     employeeImage: string;
     @Column({ default: true })

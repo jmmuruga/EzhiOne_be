@@ -15,6 +15,8 @@ import financialYearRouter from './api/financialYearCreation/financialYearCreati
 import otpPinRouter from './api/otpPinSetting/otpPinSetting.controller';
 import userDetailsRouter from './api/userRegistration/userRegistration.controller';
 import employeeRouter from './api/employeeRegistration/employee.controller';
+import brandRouter from './api/brand/brand.controller';
+import newCustomerRouter from './api/newCustomer/newCustomer.controller';
 
 const app = express();
 
@@ -38,7 +40,9 @@ app.use('/itemGroupCategoryRouter', cors(corsOptions), itemGroupCategoryRouter);
 app.use('/financialYearRouter', cors(corsOptions), financialYearRouter);
 app.use('/otpPinRouter', cors(corsOptions), otpPinRouter);
 app.use('/userDetailsRouter', cors(corsOptions), userDetailsRouter);
-app.use('/employeeRouter', cors(corsOptions), employeeRouter)
+app.use('/employeeRouter', cors(corsOptions), employeeRouter);
+app.use('/brandRouter', cors(corsOptions), brandRouter);
+app.use('/newCustomerRouter', cors(corsOptions), newCustomerRouter);
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 
