@@ -32,7 +32,7 @@ export class newCustomer {
     district: string
     @Column()
     pincode: string
-    @Column()
+    @Column({nullable: true})
     companyName: string
     @Column({default: true})
     status: boolean
@@ -44,5 +44,7 @@ export class newCustomer {
     createdAt: string;
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt: string;
+    @Column()
+    companyId: string
 
 }

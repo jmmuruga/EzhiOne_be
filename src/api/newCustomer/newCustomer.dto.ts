@@ -18,6 +18,7 @@ export interface newCustomerDto {
     companyName: string
     cuid: string;
     muid: string;
+    companyId: string
 }
 
 export interface newCustomerStatusDto {
@@ -40,7 +41,8 @@ export const newCustomerValidation = Joi.object({
     taluk: Joi.string().required(),
     district: Joi.string().required(),
     pincode: Joi.string().required(),
-    companyName: Joi.string().required(),
+    companyName: Joi.string().optional().allow(null, ''),
     cuid: Joi.string().optional().allow(null, ''),
-    muid: Joi.string().optional().allow(null, '')
+    muid: Joi.string().optional().allow(null, ''),
+    companyId: Joi.string().required(),
 })

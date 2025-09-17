@@ -138,6 +138,7 @@ export const deleteNewCustomer = async (req: Request, res: Response) => {
         const newCustomerFound = await newCustomerRepositry.findOneBy({
             customerId: customerId,
         });
+
         if (!newCustomerFound) {
             throw new ValidationException("Customer Not Found ");
         }
@@ -147,9 +148,11 @@ export const deleteNewCustomer = async (req: Request, res: Response) => {
             .from(newCustomer)
             .where({ customerId: customerId })
             .execute();
+
         res.status(200).send({
             IsSuccess: `${newCustomerFound.customerName} Deleted Successfully `,
         });
+
     } catch (error) {
         if (error instanceof ValidationException) {
             return res.status(400).send({
