@@ -9,11 +9,13 @@ export interface financialYearCreationDto {
     status: boolean
     cuid?: string
     muid?: string
+    companyId: string
 }
 
 export interface financialYearStatusDto {
     financialYearId: string;
     status: boolean;
+    companyId: string
 }
 
 export const financialYearCreationValidation = Joi.object({
@@ -22,7 +24,8 @@ export const financialYearCreationValidation = Joi.object({
     financialYear: Joi.string().required(),
     fromDate: Joi.string().required(),
     toDate: Joi.string().required(),
-    status: Joi.boolean().optional(),
-    cuid: Joi.string().optional(),
-    muid: Joi.string().optional(),
+    status: Joi.boolean().optional().allow(null, ''),
+    cuid: Joi.string().optional().allow(null, ''),
+    muid: Joi.string().optional().allow(null, ''),
+    companyId: Joi.string().required(),
 })

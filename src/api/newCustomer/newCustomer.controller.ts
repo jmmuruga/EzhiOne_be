@@ -3,10 +3,10 @@ import { addUpdateNewCustomer, createCustomerId, deleteNewCustomer, getNewCustom
 
 const newCustomerRouter = Router()
 
-newCustomerRouter.get('/createCustomerId', (req, res) => { createCustomerId(req, res) });
+newCustomerRouter.get('/createCustomerId/:companyId', (req, res) => { createCustomerId(req, res) });
 newCustomerRouter.post('/addUpdateNewCustomer', (req, res) => { addUpdateNewCustomer(req, res) });
-newCustomerRouter.get('/getNewCustomerDetails', (req, res) => { getNewCustomerDetails(req, res) });
+newCustomerRouter.get('/getNewCustomerDetails/:companyId', (req, res) => { getNewCustomerDetails(req, res) });
 newCustomerRouter.post('/updateNewCustomerStatus', (req, res) => { updateNewCustomerStatus(req, res) });
-newCustomerRouter.delete('/deleteNewCustomer/:customerId', (req, res) => { deleteNewCustomer(req, res) });
+newCustomerRouter.delete('/deleteNewCustomer/:customerId/:companyId', (req, res) => { deleteNewCustomer(req, res) });
 
 export default newCustomerRouter;

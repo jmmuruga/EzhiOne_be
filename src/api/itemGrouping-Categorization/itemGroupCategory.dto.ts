@@ -6,17 +6,20 @@ export interface ItemGroupCategoryDto {
     status: boolean
     cuid?: string
     muid?: string
+    companyId: string
 }
 
 export interface ItemGroupCategoryStatusDto {
     itemGroupId: string;
     status: boolean;
+    companyId: string
 }
 
 export const itemGroupCategoryValidation = Joi.object({
     itemGroupId: Joi.string().required(),
     groupName: Joi.string().required(),
-    status: Joi.boolean().optional(),
-    cuid: Joi.string().optional(),
-    muid: Joi.string().optional(),
+    status: Joi.boolean().optional().allow(null, ''),
+    cuid: Joi.string().optional().allow(null, ''),
+    muid: Joi.string().optional().allow(null, ''),
+    companyId: Joi.string().required(),
 })

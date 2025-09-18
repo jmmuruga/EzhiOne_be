@@ -54,4 +54,6 @@ export class employeeRegistration {
     createdAt: string;
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt: string;
+    @Column()
+    companyId: string
 }

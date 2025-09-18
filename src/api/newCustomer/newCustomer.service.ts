@@ -2,16 +2,17 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { newCustomer } from "./newCustomer.model";
 import { ValidationException } from "../../core/exception";
-import { newCustomerDto, newCustomerValidation } from "./newCustomer.dto";
+import { newCustomerDto, newCustomerStatusDto, newCustomerValidation } from "./newCustomer.dto";
 import { Not } from "typeorm";
 
 export const createCustomerId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const newCustomerRepositry =
             appSource.getRepository(newCustomer);
         let customerId = await newCustomerRepositry.query(
             `SELECT customerId 
-            FROM [${process.env.DB_NAME}].[dbo].[new_customer]
+            FROM [${process.env.DB_NAME}].[dbo].[new_customer]  where companyId = '${companyId}'
             Group by customerId 
             ORDER BY CAST(customerId  AS INT) DESC;`
         );
@@ -48,6 +49,7 @@ export const addUpdateNewCustomer = async (
         );
         const existingDetails = await newCustomerRepositry.findOneBy({
             customerId: payload.customerId,
+            companyId: payload.companyId
         });
         if (existingDetails) {
             const emailValidation = await newCustomerRepositry.findOneBy({
@@ -114,9 +116,11 @@ export const addUpdateNewCustomer = async (
 
 export const getNewCustomerDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const newCustomerRepositry = appSource.getRepository(newCustomer);
         const newCustomerRegistor = await newCustomerRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: newCustomerRegistor,
@@ -134,9 +138,10 @@ export const getNewCustomerDetails = async (req: Request, res: Response) => {
 export const deleteNewCustomer = async (req: Request, res: Response) => {
     try {
         const customerId = req.params.customerId;
+        const companyId = req.params.companyId;
         const newCustomerRepositry = appSource.getTreeRepository(newCustomer);
         const newCustomerFound = await newCustomerRepositry.findOneBy({
-            customerId: customerId,
+            customerId: customerId, companyId: companyId
         });
 
         if (!newCustomerFound) {
@@ -146,7 +151,7 @@ export const deleteNewCustomer = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(newCustomer)
-            .where({ customerId: customerId })
+            .where({ customerId: customerId, companyId: companyId })
             .execute();
 
         res.status(200).send({
@@ -165,11 +170,11 @@ export const deleteNewCustomer = async (req: Request, res: Response) => {
 
 export const updateNewCustomerStatus = async (req: Request, res: Response) => {
     try {
-        const newCustomerStatus: newCustomer = req.body;
+        const newCustomerStatus: newCustomerStatusDto = req.body;
         const newCustomerRepositry =
             appSource.getRepository(newCustomer);
         const newCustomerFound = await newCustomerRepositry.findOneBy({
-            customerId: newCustomerStatus.customerId,
+            customerId: newCustomerStatus.customerId, companyId: newCustomerStatus.companyId
         });
         if (!newCustomerFound) {
             throw new ValidationException("Customer Not Found");
@@ -179,6 +184,7 @@ export const updateNewCustomerStatus = async (req: Request, res: Response) => {
             .update(newCustomer)
             .set({ status: newCustomerStatus.status })
             .where({ customerId: newCustomerStatus.customerId })
+            .andWhere({ companyId: newCustomerStatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${newCustomerFound.customerName} Changed Successfully`,

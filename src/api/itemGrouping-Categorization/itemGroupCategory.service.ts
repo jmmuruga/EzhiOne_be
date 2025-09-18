@@ -8,11 +8,12 @@ import { Not } from "typeorm";
 
 export const getGroupCategoryId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const itemGroupCategoryRepositry =
             appSource.getRepository(ItemGroupCategory);
         let itemGroupId = await itemGroupCategoryRepositry.query(
             `SELECT itemGroupId
-            FROM [${process.env.DB_NAME}].[dbo].[item_group_category]
+            FROM [${process.env.DB_NAME}].[dbo].[item_group_category] where companyId = '${companyId}'
             Group by itemGroupId
             ORDER BY CAST(itemGroupId AS INT) DESC;`
         );
@@ -37,11 +38,9 @@ export const getGroupCategoryId = async (req: Request, res: Response) => {
 export const addUpdateItemGroupCategory = async (req: Request, res: Response) => {
     try {
         const payload: ItemGroupCategoryDto = req.body;
-        console.log("Payload received:", payload);
         // Validate payload schema
         const validation = itemGroupCategoryValidation.validate(payload);
         if (validation.error) {
-            console.error("Validation failed:", validation.error.details);
             throw new ValidationException(validation.error.message);
         }
 
@@ -50,12 +49,14 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
         // Check if record exists
         const existingDetails = await itemGroupCategoryRepositry.findOneBy({
             itemGroupId: payload.itemGroupId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
             const groupNameValidation = await itemGroupCategoryRepositry.findOneBy({
                 groupName: payload.groupName,
                 itemGroupId: Not(payload.itemGroupId),
+                companyId: payload.companyId
             });
             if (groupNameValidation) {
                 throw new ValidationException(
@@ -77,6 +78,7 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
             const groupNameValidation = await itemGroupCategoryRepositry.findOneBy({
                 groupName: payload.groupName,
                 itemGroupId: Not(payload.itemGroupId),
+                companyId: payload.companyId
             });
             if (groupNameValidation) {
                 throw new ValidationException(
@@ -101,10 +103,12 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
 
 export const getItemGroupCategoryDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const itemGroupCategoryRepositry =
             appSource.getRepository(ItemGroupCategory);
         const itemGroupandCategory = await itemGroupCategoryRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: itemGroupandCategory,
@@ -126,6 +130,7 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
             appSource.getRepository(ItemGroupCategory);
         const UnitMeasurementFound = await itemGroupCategoryRepositry.findOneBy({
             itemGroupId: ItemGroupCategorystatus.itemGroupId,
+            companyId: ItemGroupCategorystatus.companyId
         });
         if (!UnitMeasurementFound) {
             throw new ValidationException("UnitMeasurement Not Found");
@@ -135,6 +140,7 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
             .update(ItemGroupCategory)
             .set({ status: ItemGroupCategorystatus.status })
             .where({ itemGroupId: ItemGroupCategorystatus.itemGroupId })
+            .andWhere({ companyId: ItemGroupCategorystatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${UnitMeasurementFound.groupName} Changed Successfully`,
@@ -153,11 +159,12 @@ export const deleteItemGroupCategory = async (req: Request, res: Response) => {
     try {
         const itemGroupId = req.params.itemGroupId;
         const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
-
+        const companyId = req.params.companyId;
         // Check if company exists
-        // console.log("Deleting unitMeasurementId:", unitMeasurementId);
-        const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({ itemGroupId });
-        console.log("Found itemGrpCat:", itemGrpCatFound);
+        const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({
+            itemGroupId: itemGroupId, companyId: companyId
+        });
+
         if (!itemGrpCatFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -167,10 +174,8 @@ export const deleteItemGroupCategory = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(ItemGroupCategory)
-            .where("itemGroupId = :itemGroupId", { itemGroupId: String(itemGroupId) })
+            .where({ itemGroupId: itemGroupId, companyId: companyId })
             .execute();
-
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -184,7 +189,6 @@ export const deleteItemGroupCategory = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

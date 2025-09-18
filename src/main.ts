@@ -17,6 +17,7 @@ import userDetailsRouter from './api/userRegistration/userRegistration.controlle
 import employeeRouter from './api/employeeRegistration/employee.controller';
 import brandRouter from './api/brand/brand.controller';
 import newCustomerRouter from './api/newCustomer/newCustomer.controller';
+import leadsRouter from './api/leads/leads.controller';
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/userDetailsRouter', cors(corsOptions), userDetailsRouter);
 app.use('/employeeRouter', cors(corsOptions), employeeRouter);
 app.use('/brandRouter', cors(corsOptions), brandRouter);
 app.use('/newCustomerRouter', cors(corsOptions), newCustomerRouter);
+app.use('/leadsRouter', cors(corsOptions), leadsRouter)
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 

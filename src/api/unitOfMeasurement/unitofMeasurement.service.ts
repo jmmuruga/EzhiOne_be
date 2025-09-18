@@ -7,11 +7,12 @@ import { Not } from "typeorm";
 
 export const getUnitMeasurementId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const unitMeasurementRepositry =
             appSource.getRepository(unitOfMeasurement);
         let unitMeasurementId = await unitMeasurementRepositry.query(
             `SELECT unitMeasurementId
-            FROM [${process.env.DB_NAME}].[dbo].[unit_of_measurement]
+            FROM [${process.env.DB_NAME}].[dbo].[unit_of_measurement] where companyId = '${companyId}'
             Group by unitMeasurementId
             ORDER BY CAST(unitMeasurementId AS INT) DESC;`
         );
@@ -36,11 +37,9 @@ export const getUnitMeasurementId = async (req: Request, res: Response) => {
 export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
     try {
         const payload: unitOfMeasurementDto = req.body;
-        console.log("Payload received:", payload);
         // Validate payload schema
         const validation = unitOfMeasurementValidation.validate(payload);
         if (validation.error) {
-            console.error("Validation failed:", validation.error.details);
             throw new ValidationException(validation.error.message);
         }
 
@@ -49,12 +48,14 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
         // Check if record exists
         const existingDetails = await unitMeasurementRepository.findOneBy({
             unitMeasurementId: payload.unitMeasurementId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
             const unitShortValidation = await unitMeasurementRepository.findOneBy({
                 unitShort: payload.unitShort,
                 unitMeasurementId: Not(payload.unitMeasurementId),
+                companyId: payload.companyId
             })
             if (unitShortValidation) {
                 throw new ValidationException(
@@ -76,6 +77,7 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
             const unitShortValidation = await unitMeasurementRepository.findOneBy({
                 unitShort: payload.unitShort,
                 unitMeasurementId: Not(payload.unitMeasurementId),
+                companyId: payload.companyId
             })
             if (unitShortValidation) {
                 throw new ValidationException(
@@ -100,10 +102,12 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
 
 export const getUnitMeasurementDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const unitMeasurementRepository =
             appSource.getRepository(unitOfMeasurement);
         const unitMeasurement = await unitMeasurementRepository
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: unitMeasurement,
@@ -125,6 +129,7 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
             appSource.getRepository(unitOfMeasurement);
         const UnitMeasurementFound = await unitMeasurementRepository.findOneBy({
             unitMeasurementId: UnitMeasurementstatus.unitMeasurementId,
+            companyId: UnitMeasurementstatus.companyId
         });
         if (!UnitMeasurementFound) {
             throw new ValidationException("UnitMeasurement Not Found");
@@ -134,6 +139,7 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
             .update(unitOfMeasurement)
             .set({ status: UnitMeasurementstatus.status })
             .where({ unitMeasurementId: UnitMeasurementstatus.unitMeasurementId })
+            .andWhere({ companyId: UnitMeasurementstatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${UnitMeasurementFound.unitShort} Changed Successfully`,
@@ -152,11 +158,11 @@ export const deleteUnitMeasurement = async (req: Request, res: Response) => {
     try {
         const unitMeasurementId = req.params.unitMeasurementId;
         const unitMeasurementRepository = appSource.getRepository(unitOfMeasurement);
-
+        const companyId = req.params.companyId;
         // Check if company exists
-        // console.log("Deleting unitMeasurementId:", unitMeasurementId);
-        const unitMeasurementFound = await unitMeasurementRepository.findOneBy({ unitMeasurementId });
-        console.log("Found unitMeasurement:", unitMeasurementFound);
+        const unitMeasurementFound = await unitMeasurementRepository.findOneBy({
+            unitMeasurementId: unitMeasurementId, companyId: companyId
+        });
         if (!unitMeasurementFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -166,10 +172,8 @@ export const deleteUnitMeasurement = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(unitOfMeasurement)
-            .where("unitMeasurementId = :unitMeasurementId", { unitMeasurementId: String(unitMeasurementId) })
+            .where({ unitMeasurementId: unitMeasurementId, companyId: companyId })
             .execute();
-
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -183,7 +187,6 @@ export const deleteUnitMeasurement = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

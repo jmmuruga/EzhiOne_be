@@ -28,4 +28,6 @@ export class itemMaster {
     created_at: Date;
     @UpdateDateColumn()
     updated_at: Date;
+    @Column()
+    companyId: string
 }

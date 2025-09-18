@@ -3,10 +3,10 @@ import { addUpdateBrand, createBrandId, deleteBrand, getBrandDetails, updateBran
 
 const brandRouter = Router()
 
-brandRouter.get('/createBrandId', (req, res) => { createBrandId(req, res) });
+brandRouter.get('/createBrandId/:companyId', (req, res) => { createBrandId(req, res) });
 brandRouter.post('/addUpdateBrand', (req, res) => { addUpdateBrand(req, res) });
-brandRouter.get('/getBrandDetails', (req, res) => { getBrandDetails(req, res) });
+brandRouter.get('/getBrandDetails/:companyId', (req, res) => { getBrandDetails(req, res) });
 brandRouter.post('/updateBrandStatus', (req, res) => { updateBrandStatus(req, res) });
-brandRouter.delete('/deleteBrand/:brandId', (req, res) => { deleteBrand(req, res) });
+brandRouter.delete('/deleteBrand/:brandId/:companyId', (req, res) => { deleteBrand(req, res) });
 
 export default brandRouter;

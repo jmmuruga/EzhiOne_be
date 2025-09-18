@@ -8,14 +8,16 @@ export class ItemGroupCategory {
     itemGroupId: string;
     @Column()
     groupName: string
-    @Column()
+    @Column({default: true})
     status: boolean
-    @Column({nullable: true})
+    @Column({ nullable: true })
     cuid: string
-    @Column({nullable: true})
+    @Column({ nullable: true })
     muid: string
     @CreateDateColumn()
     created_at: Date
     @UpdateDateColumn()
     updated_at: Date
+    @Column()
+    companyId: string
 }

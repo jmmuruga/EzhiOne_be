@@ -6,11 +6,12 @@ import { brandDto, brandValidation } from "./brand.dto";
 
 export const createBrandId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const brandRepositry =
             appSource.getRepository(Brand);
         let brandId = await brandRepositry.query(
             `SELECT brandId 
-            FROM [${process.env.DB_NAME}].[dbo].[brand]
+            FROM [${process.env.DB_NAME}].[dbo].[brand] where companyId = '${companyId}'
             Group by brandId 
             ORDER BY CAST(brandId  AS INT) DESC;`
         );
@@ -43,6 +44,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
         const brandRepositry = appSource.getRepository(Brand);
         const existingDetails = await brandRepositry.findOneBy({
             brandId: payload.brandId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
@@ -82,9 +84,11 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
 
 export const getBrandDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const brandRepositry = appSource.getRepository(Brand);
         const brand = await brandRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: brand,
@@ -102,9 +106,10 @@ export const getBrandDetails = async (req: Request, res: Response) => {
 export const deleteBrand = async (req: Request, res: Response) => {
     try {
         const brandId = req.params.brandId;
+        const companyId = req.params.companyId;
         const brandRepositry = appSource.getTreeRepository(Brand);
         const brandFound = await brandRepositry.findOneBy({
-            brandId: brandId,
+            brandId: brandId, companyId: companyId
         });
         if (!brandFound) {
             throw new ValidationException("Brand Not Found ");
@@ -113,7 +118,7 @@ export const deleteBrand = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(Brand)
-            .where({ brandId: brandId })
+            .where({ brandId: brandId, companyId: companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `${brandFound.brandName} Deleted Successfully `,
@@ -134,7 +139,7 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
         const brandRepositry =
             appSource.getRepository(Brand);
         const brandFound = await brandRepositry.findOneBy({
-            brandId: brandStatus.brandId,
+            brandId: brandStatus.brandId, companyId: brandStatus.companyId
         });
         if (!brandFound) {
             throw new ValidationException("Brand Not Found");
@@ -144,6 +149,7 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
             .update(Brand)
             .set({ status: brandStatus.status })
             .where({ brandId: brandStatus.brandId })
+            .andWhere({ companyId: brandStatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${brandFound.brandName} Changed Successfully`,

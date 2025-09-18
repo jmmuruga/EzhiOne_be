@@ -11,6 +11,7 @@ import { UserDetails } from "../../api/userRegistration/userRegistration.model";
 import { employeeRegistration } from "../../api/employeeRegistration/employee.model";
 import { Brand } from "../../api/brand/brand.model";
 import { newCustomer } from "../../api/newCustomer/newCustomer.model";
+import { leads } from "../../api/leads/leads.model";
 
 const Entities = [
   itemMaster,
@@ -22,7 +23,8 @@ const Entities = [
   UserDetails,
   employeeRegistration,
   Brand,
-  newCustomer
+  newCustomer,
+  leads
 ]
 
 export const appSource = new DataSource({

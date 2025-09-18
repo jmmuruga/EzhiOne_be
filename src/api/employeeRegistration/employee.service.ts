@@ -7,11 +7,12 @@ import { Not } from "typeorm";
 
 export const getEmployeeId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const employeeRegistrationRepositry =
             appSource.getRepository(employeeRegistration);
         let employeeId = await employeeRegistrationRepositry.query(
             `SELECT employeeId
-            FROM [${process.env.DB_NAME}].[dbo].[employee_registration]
+            FROM [${process.env.DB_NAME}].[dbo].[employee_registration] where companyId = '${companyId}'
             Group by employeeId
             ORDER BY CAST(employeeId AS INT) DESC;`
         );
@@ -47,11 +48,13 @@ export const addUpdateEmployeeRegistration = async (
             appSource.getRepository(employeeRegistration);
         const existingDetails = await employeeRegistrationRepositry.findOneBy({
             employeeId: payload.employeeId,
+            companyId: payload.companyId
         });
         if (existingDetails) {
             const emailValidation = await employeeRegistrationRepositry.findOneBy({
                 empEmail: payload.empEmail,
                 employeeId: Not(payload.employeeId),
+                companyId: payload.companyId
             });
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist");
@@ -59,6 +62,7 @@ export const addUpdateEmployeeRegistration = async (
             const mobileValidation = await employeeRegistrationRepositry.findOneBy({
                 employeeMobile: payload.employeeMobile,
                 employeeId: Not(payload.employeeId),
+                companyId: payload.companyId
             });
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
@@ -82,12 +86,14 @@ export const addUpdateEmployeeRegistration = async (
         } else {
             const emailValidation = await employeeRegistrationRepositry.findOneBy({
                 empEmail: payload.empEmail,
+                companyId: payload.companyId
             });
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist");
             }
             const mobileValidation = await employeeRegistrationRepositry.findOneBy({
                 employeeMobile: payload.employeeMobile,
+                companyId: payload.companyId
             });
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
@@ -109,10 +115,12 @@ export const addUpdateEmployeeRegistration = async (
 
 export const getEmployeeDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const employeeRegistrationRepositry =
             appSource.getRepository(employeeRegistration);
         const employee = await employeeRegistrationRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: employee,
@@ -133,7 +141,7 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
         const employeeRegistrationRepositry =
             appSource.getRepository(employeeRegistration);
         const emlpoyeeFound = await employeeRegistrationRepositry.findOneBy({
-            employeeId: employeeStatus.employeeId,
+            employeeId: employeeStatus.employeeId, companyId: employeeStatus.companyId
         });
         if (!emlpoyeeFound) {
             throw new ValidationException("Company Not Found");
@@ -142,7 +150,7 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .update(employeeRegistration)
             .set({ status: employeeStatus.status })
-            .where({ employeeId: employeeStatus.employeeId })
+            .where({ employeeId: employeeStatus.employeeId, companyId: employeeStatus.companyId })
             .execute();
 
         res.status(200).send({
@@ -161,6 +169,7 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
 export const deleteEmployee = async (req: Request, res: Response) => {
     try {
         const employeeId = req.params.employeeId;
+        const companyId = req.params.companyId;
         const employeeRegistrationRepositry = appSource.getTreeRepository(employeeRegistration);
         const employeeFound = await employeeRegistrationRepositry.findOneBy({
             employeeId: employeeId,
@@ -173,7 +182,7 @@ export const deleteEmployee = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(employeeRegistration)
-            .where({ employeeId: employeeId })
+            .where({ employeeId: employeeId, companyId: companyId })
             .execute();
 
         res.status(200).send({

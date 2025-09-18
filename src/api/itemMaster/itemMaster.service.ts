@@ -8,11 +8,12 @@ import { Not } from "typeorm";
 
 export const createItemMasterID = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const itemMasterRepositry =
             appSource.getRepository(itemMaster);
         let itemMasterId = await itemMasterRepositry.query(
             `SELECT itemMasterId 
-            FROM [${process.env.DB_NAME}].[dbo].[item_master]
+            FROM [${process.env.DB_NAME}].[dbo].[item_master] where companyId = '${companyId}'
             Group by itemMasterId 
             ORDER BY CAST(itemMasterId  AS INT) DESC;`
         );
@@ -45,13 +46,15 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
         const itemMasterRepository = appSource.getRepository(itemMaster);
         const existingDetails = await itemMasterRepository.findOneBy({
             itemMasterId: payload.itemMasterId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
             const itemNameValidation = await itemMasterRepository.findOneBy({
                 // itemMasterId: payload.itemMasterId,
                 itemName: payload.itemName,
-                itemMasterId: Not(payload.itemMasterId)
+                itemMasterId: Not(payload.itemMasterId),
+                companyId: payload.companyId
             });
             if (itemNameValidation) {
                 throw new ValidationException(
@@ -78,7 +81,8 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
             return;
         } else {
             const itemNameValidation = await itemMasterRepository.findOneBy({
-                itemName: payload.itemName
+                itemName: payload.itemName,
+                companyId: payload.companyId
             });
             if (itemNameValidation) {
                 throw new ValidationException(
@@ -103,9 +107,11 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
 
 export const getItemMasterDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId
         const itemMasterRepository = appSource.getRepository(itemMaster);
         const itemmaster = await itemMasterRepository
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: itemmaster,
@@ -123,9 +129,10 @@ export const getItemMasterDetails = async (req: Request, res: Response) => {
 export const deleteItemMaster = async (req: Request, res: Response) => {
     try {
         const itemMasterId = req.params.itemMasterId;
+        const companyId = req.params.companyId
         const itemMasterRepository = appSource.getTreeRepository(itemMaster);
         const itemMasterFound = await itemMasterRepository.findOneBy({
-            itemMasterId: itemMasterId,
+            itemMasterId: itemMasterId, companyId: companyId
         });
         if (!itemMasterFound) {
             throw new ValidationException("Item Not Found ");
@@ -134,7 +141,7 @@ export const deleteItemMaster = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(itemMaster)
-            .where({ itemMasterId: itemMasterId })
+            .where({ itemMasterId: itemMasterId, companyId: companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `${itemMasterFound.itemName} Deleted Successfully `,
@@ -155,7 +162,7 @@ export const updateItemMasterStatus = async (req: Request, res: Response) => {
         const itemMasterRepository =
             appSource.getRepository(itemMaster);
         const itemMasterFound = await itemMasterRepository.findOneBy({
-            itemMasterId: itemMasterStatus.itemMasterId,
+            itemMasterId: itemMasterStatus.itemMasterId, companyId: itemMasterStatus.companyId
         });
         if (!itemMasterFound) {
             throw new ValidationException("Item Not Found");
@@ -165,6 +172,7 @@ export const updateItemMasterStatus = async (req: Request, res: Response) => {
             .update(itemMaster)
             .set({ status: itemMasterStatus.status })
             .where({ itemMasterId: itemMasterStatus.itemMasterId })
+            .andWhere({ companyId: itemMasterStatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${itemMasterFound.itemName} Changed Successfully`,

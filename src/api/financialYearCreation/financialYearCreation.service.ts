@@ -7,11 +7,12 @@ import { Not } from "typeorm";
 
 export const getFinancialYearId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const financialYearRepositry =
             appSource.getRepository(FinancialYearCreation);
         let financialYearId = await financialYearRepositry.query(
             `SELECT financialYearId
-            FROM [${process.env.DB_NAME}].[dbo].[financial_year_creation]
+            FROM [${process.env.DB_NAME}].[dbo].[financial_year_creation] where companyId = '${companyId}'
             Group by financialYearId
             ORDER BY CAST(financialYearId AS INT) DESC;`
         );
@@ -49,12 +50,14 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
         // Check if record exists
         const existingDetails = await financialYearRepositry.findOneBy({
             financialYearId: payload.financialYearId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
             const groupNameValidation = await financialYearRepositry.findOneBy({
                 companyName: payload.companyName,
                 financialYearId: Not(payload.financialYearId),
+                companyId: payload.companyId
             });
             if (groupNameValidation) {
                 throw new ValidationException(
@@ -76,6 +79,7 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
             const groupNameValidation = await financialYearRepositry.findOneBy({
                 companyName: payload.companyName,
                 financialYearId: Not(payload.financialYearId),
+                companyId: payload.companyId
             });
             if (groupNameValidation) {
                 throw new ValidationException(
@@ -100,10 +104,12 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
 
 export const getFinancialYearDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const financialYearRepositry =
             appSource.getRepository(FinancialYearCreation);
         const financialYear = await financialYearRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: financialYear,
@@ -124,7 +130,7 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
         const financialYearRepositry =
             appSource.getRepository(FinancialYearCreation);
         const financialYearFound = await financialYearRepositry.findOneBy({
-            financialYearId: financialYearstatus.financialYearId,
+            financialYearId: financialYearstatus.financialYearId, companyId: financialYearstatus.companyId
         });
         if (!financialYearFound) {
             throw new ValidationException("Financia Year Not Found");
@@ -134,6 +140,7 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
             .update(FinancialYearCreation)
             .set({ status: financialYearstatus.status })
             .where({ financialYearId: financialYearstatus.financialYearId })
+            .andWhere({ companyId: financialYearstatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${financialYearFound.companyName} Changed Successfully`,
@@ -150,6 +157,7 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
 
 export const deleteFinancialYear = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const financialYearId = req.params.financialYearId;
         const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
 
@@ -166,7 +174,7 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(FinancialYearCreation)
-            .where("financialYearId = :financialYearId", { financialYearId: String(financialYearId) })
+            .where({ financialYearId: financialYearId,  companyId: companyId })
             .execute();
 
         console.log("Delete Result:", deleteResult);
