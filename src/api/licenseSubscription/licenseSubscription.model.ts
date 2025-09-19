@@ -1,18 +1,20 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class OtpPinSetting {
+export class licenseSubscription {
     @PrimaryGeneratedColumn()
     id: string
     @Column()
-    otpPinId: string
+    licenseId: string
     @Column()
-    addPin: string
+    companyName: string
     @Column()
-    editPin: string
+    licenseStartDate: string
     @Column()
-    deletePin: string
-    @Column({default: true})
+    licenseExpiryDate: string
+    @Column()
+    graceDays: string
+    @Column({ default: true })
     status: boolean
     @Column()
     companyId: string
@@ -21,7 +23,8 @@ export class OtpPinSetting {
     @Column({ 'nullable': true })
     muid: string
     @CreateDateColumn()
-    created_at: Date
+    created_at: Date;
     @UpdateDateColumn()
-    updated_at: Date
+    updated_at: Date;
+
 }

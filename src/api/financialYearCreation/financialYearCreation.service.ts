@@ -37,11 +37,9 @@ export const getFinancialYearId = async (req: Request, res: Response) => {
 export const addUpdateFinancialYear = async (req: Request, res: Response) => {
     try {
         const payload: financialYearCreationDto = req.body;
-        console.log("Payload received:", payload);
         // Validate payload schema
         const validation = financialYearCreationValidation.validate(payload);
         if (validation.error) {
-            console.error("Validation failed:", validation.error.details);
             throw new ValidationException(validation.error.message);
         }
 
@@ -162,9 +160,7 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
         const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
 
         // Check if company exists
-        // console.log("Deleting unitMeasurementId:", unitMeasurementId);
         const financialYearFound = await financialYearRepositry.findOneBy({ financialYearId });
-        console.log("Found financial year:", financialYearFound);
         if (!financialYearFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -176,8 +172,6 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
             .from(FinancialYearCreation)
             .where({ financialYearId: financialYearId,  companyId: companyId })
             .execute();
-
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -191,7 +185,6 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

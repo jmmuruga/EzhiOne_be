@@ -7,11 +7,12 @@ import { decrypter, encryptString } from "../../shared/helper";
 
 export const getOtpPinId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const otpPinRepostory =
             appSource.getRepository(OtpPinSetting);
         let otpPinId = await otpPinRepostory.query(
             `SELECT otpPinId
-            FROM [${process.env.DB_NAME}].[dbo].[otp_pin_setting]
+            FROM [${process.env.DB_NAME}].[dbo].[otp_pin_setting] where companyId = '${companyId}'
             Group by otpPinId
             ORDER BY CAST(otpPinId AS INT) DESC;`
         );
@@ -33,64 +34,23 @@ export const getOtpPinId = async (req: Request, res: Response) => {
     }
 };
 
-// export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
-//     try {
-//         const payload: OtpPinSettingDto = req.body;
-//         console.log("Payload received:", payload);
-//         // Validate payload schema
-//         const validation = otpPinSettingValidtion.validate(payload);
-//         if (validation.error) {
-//             console.error("Validation failed:", validation.error.details);
-//             throw new ValidationException(validation.error.message);
-//         }
-
-//         const otpPinRepostory = appSource.getRepository(OtpPinSetting);
-
-//         // Check if record exists
-//         const existingDetails = await otpPinRepostory.findOneBy({
-//             otpPinId: payload.otpPinId,
-//         });
-
-//         if (existingDetails) {
-//             // Update existing record
-//             await otpPinRepostory
-//                 .update({ otpPinId: payload.otpPinId }, payload)
-//                 .then(() => {
-//                     res.status(200).send({
-//                         IsSuccess: "OTP Pin Setting Updated Successfully",
-//                     });
-//                 })
-//                 .catch((error) => {
-//                     res.status(500).send(error);
-//                 });
-//         } else {
-
-//             // Add new record
-//             await otpPinRepostory.save(payload);
-//             res.status(200).send({
-//                 IsSuccess: "OTP Pin Added Successfully",
-//             });
-//         }
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error.message,
-//             });
-//         }
-//         res.status(500).send(error);
-//     }
-// };
-
 export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
     try {
         const payload: OtpPinSettingDto = req.body;
-        console.log("Payload received:", payload);
 
         // Validate payload schema
         const validation = otpPinSettingValidtion.validate(payload);
         if (validation.error) {
-            console.error("Validation failed:", validation.error.details);
             throw new ValidationException(validation.error.message);
+        }
+
+        const { addPin, editPin, deletePin } = payload;
+
+        // ✅ Custom pin uniqueness validation
+        if (addPin && editPin && deletePin && addPin === editPin && addPin === deletePin) {
+            return res.status(400).send({
+                message: "Add, Edit, and Delete pins cannot all be the same.",
+            });
         }
 
         const otpPinRepostory = appSource.getRepository(OtpPinSetting);
@@ -109,6 +69,7 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
         // Check if record exists
         const existingDetails = await otpPinRepostory.findOneBy({
             otpPinId: payload.otpPinId,
+            companyId: payload.companyId
         });
 
         if (existingDetails) {
@@ -140,34 +101,14 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
     }
 };
 
-// export const getOtpPinDetails = async (req: Request, res: Response) => {
-//     try {
-//         const otpPinRepostory =
-//             appSource.getRepository(OtpPinSetting);
-//         const otpPin = await otpPinRepostory
-//             .createQueryBuilder("")
-//             .getMany();
-//         res.status(200).send({
-//             Result: otpPin,
-//         });
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error?.message,
-//             });
-//         }
-//         res.status(500).send(error);
-//     }
-// };
-
 export const getOtpPinDetails = async (req: Request, res: Response) => {
     try {
         const otpPinRepository = appSource.getRepository(OtpPinSetting);
-
+        const companyId = req.params.companyId;
         // Fetch all OTP pin settings
-        const otpPins: OtpPinSetting[] = await otpPinRepository.find();
-
-        // Decrypt each pin safely
+        const otpPins: OtpPinSetting[] = await otpPinRepository.find({
+            where: { companyId: companyId },
+        });
         const decryptedPins = otpPins.map((x) => {
             try {
                 return {
@@ -177,7 +118,6 @@ export const getOtpPinDetails = async (req: Request, res: Response) => {
                     deletePin: x.deletePin ? decrypter(x.deletePin) : x.deletePin,
                 };
             } catch (err) {
-                console.error("Decryption error for record:", x, err);
                 // Return original values if decryption fails
                 return x;
             }
@@ -187,7 +127,6 @@ export const getOtpPinDetails = async (req: Request, res: Response) => {
             Result: decryptedPins,
         });
     } catch (error) {
-        console.error("Error fetching OTP pin details:", error);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -197,14 +136,13 @@ export const getOtpPinDetails = async (req: Request, res: Response) => {
     }
 };
 
-
 export const updateOtpPinStatus = async (req: Request, res: Response) => {
     try {
         const otpPinStatus: OtpPinSetting = req.body;
         const otpPinRepostory =
             appSource.getRepository(OtpPinSetting);
         const otpPinFound = await otpPinRepostory.findOneBy({
-            otpPinId: otpPinStatus.otpPinId,
+            otpPinId: otpPinStatus.otpPinId, companyId: otpPinStatus.companyId
         });
         if (!otpPinFound) {
             throw new ValidationException("OTP pin Not Found");
@@ -214,6 +152,7 @@ export const updateOtpPinStatus = async (req: Request, res: Response) => {
             .update(OtpPinSetting)
             .set({ status: otpPinStatus.status })
             .where({ otpPinId: otpPinStatus.otpPinId })
+            .andWhere({ companyId: otpPinStatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${otpPinFound.addPin} Changed Successfully`,
@@ -232,9 +171,10 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
     try {
         const otpPinId = req.params.otpPinId;
         const otpPinRepostory = appSource.getRepository(OtpPinSetting);
-
-        const otpPinFound = await otpPinRepostory.findOneBy({ otpPinId });
-        console.log("Found OTP year:", otpPinFound);
+        const companyId = req.params.companyId;
+        const otpPinFound = await otpPinRepostory.findOneBy({
+            otpPinId: otpPinId, companyId: companyId
+        });
         if (!otpPinFound) {
             throw new ValidationException("OTP Not Found");
         }
@@ -244,10 +184,9 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(OtpPinSetting)
-            .where("otpPinId = :otpPinId", { otpPinId: String(otpPinId) })
+            .where({ otpPinId: otpPinId, companyId: companyId })
             .execute();
 
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -261,7 +200,6 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

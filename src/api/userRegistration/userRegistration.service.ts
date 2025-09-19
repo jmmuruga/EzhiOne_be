@@ -7,11 +7,12 @@ import { Not } from "typeorm";
 
 export const getUserId = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const userDetailsRepositry =
             appSource.getRepository(UserDetails);
         let userId = await userDetailsRepositry.query(
             `SELECT userId
-            FROM [${process.env.DB_NAME}].[dbo].[user_details]
+            FROM [${process.env.DB_NAME}].[dbo].[user_details] where companyId = '${companyId}'
             Group by userId
             ORDER BY CAST(userId AS INT) DESC;`
         );
@@ -36,7 +37,6 @@ export const getUserId = async (req: Request, res: Response) => {
 export const addUpdateUserDetails = async (req: Request, res: Response) => {
     try {
         const payload: UserDetailsDto = req.body;
-        console.log("Payload received:", payload);
         const validation = userDetailsValidtion.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -49,6 +49,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             const userNameValidation = await userDetailsRepositry.findOneBy({
                 userName: payload.userName,
                 userId: Not(payload.userId),
+                companyId: payload.companyId
             });
             if (userNameValidation) {
                 throw new ValidationException("User Name Already Exist ");
@@ -56,6 +57,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             const emailValidation = await userDetailsRepositry.findOneBy({
                 Email: payload.Email,
                 userId: Not(payload.userId),
+                companyId: payload.companyId
             });
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist ");
@@ -63,6 +65,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             const mobileValidation = await userDetailsRepositry.findOneBy({
                 Mobile: payload.Mobile,
                 userId: Not(payload.userId),
+                companyId: payload.companyId
             });
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist ");
@@ -86,18 +89,21 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
         } else {
             const userNameValidation = await userDetailsRepositry.findOneBy({
                 userName: payload.userName,
+                companyId: payload.companyId
             });
             if (userNameValidation) {
                 throw new ValidationException("User Name Already Exist ");
             }
             const EmailValidation = await userDetailsRepositry.findOneBy({
                 Email: payload.Email,
+                companyId: payload.companyId
             });
             if (EmailValidation) {
                 throw new ValidationException("Email Address Already Exist ");
             }
             const mobileValidation = await userDetailsRepositry.findOneBy({
                 Mobile: payload.Mobile,
+                companyId: payload.companyId
             });
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist ");
@@ -119,10 +125,12 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
 
 export const getUserDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const userDetailsRepositry =
             appSource.getRepository(UserDetails);
         const userRegistration = await userDetailsRepositry
             .createQueryBuilder("")
+            .where({ companyId: companyId })
             .getMany();
         res.status(200).send({
             Result: userRegistration,
@@ -143,7 +151,7 @@ export const updateUserStatus = async (req: Request, res: Response) => {
         const userDetailsRepositry =
             appSource.getRepository(UserDetails);
         const userregisterFound = await userDetailsRepositry.findOneBy({
-            userId: userRegisterStatus.userId,
+            userId: userRegisterStatus.userId, companyId: userRegisterStatus.companyId
         });
         if (!userregisterFound) {
             throw new ValidationException("User Not Found");
@@ -152,7 +160,8 @@ export const updateUserStatus = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .update(UserDetails)
             .set({ status: userRegisterStatus.status })
-            .where({ userId: userRegisterStatus.userId })
+            .where({ userId: userRegisterStatus.userId})
+            .andWhere({ companyId: userRegisterStatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${userregisterFound.userName} Changed Successfully`,
@@ -169,6 +178,7 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 
 export const deleteUserDetails = async (req: Request, res: Response) => {
     try {
+        const companyId = req.params.companyId;
         const userId = req.params.userId;
         const userDetailsRepositry = appSource.getRepository(UserDetails);
 
@@ -182,10 +192,8 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(UserDetails)
-            .where("userId = :userId", { userId: String(userId) })
+            .where({ userId: userId, companyId: companyId })
             .execute();
-
-        console.log("Delete Result:", deleteResult);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({
@@ -199,7 +207,6 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }
-        console.error("Delete Error:", error);
         res.status(500).send(error);
     }
 };

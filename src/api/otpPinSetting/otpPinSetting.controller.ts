@@ -3,10 +3,10 @@ import { addUpdateOtpPinSetting, deleteOtpPin, getOtpPinDetails, getOtpPinId, up
 
 const otpPinRouter = Router();
 
-otpPinRouter.get('/getOtpPinId', (req, res) => { getOtpPinId(req, res) });
+otpPinRouter.get('/getOtpPinId/:companyId', (req, res) => { getOtpPinId(req, res) });
 otpPinRouter.post('/addUpdateOtpPinSetting', (req, res) => { addUpdateOtpPinSetting(req, res) });
-otpPinRouter.get('/getOtpPinDetails', (req, res) => { getOtpPinDetails(req, res) });
+otpPinRouter.get('/getOtpPinDetails/:companyId', (req, res) => { getOtpPinDetails(req, res) });
 otpPinRouter.post('/updateOtpPinStatus', (req, res) => { updateOtpPinStatus(req, res) });
-otpPinRouter.delete('/deleteOtpPin/:otpPinId', (req, res) => { deleteOtpPin(req, res) });
+otpPinRouter.delete('/deleteOtpPin/:otpPinId/:companyId', (req, res) => { deleteOtpPin(req, res) });
 
 export default otpPinRouter;

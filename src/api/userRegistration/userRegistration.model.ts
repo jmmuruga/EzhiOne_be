@@ -18,8 +18,10 @@ export class UserDetails {
     password: string
     @Column()
     confirmpassword: string
-    @Column()
+    @Column({default: true})
     status: boolean
+    @Column()
+    companyId: string
     @Column({ 'nullable': true })
     cuid: string
     @Column({ 'nullable': true })

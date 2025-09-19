@@ -27,7 +27,6 @@ export function encryptString(data: string, secretKey: string): string {
         encrypted += cipher.final("hex");
         return encrypted;
     } catch (err) {
-        console.error("Encryption failed:", err);
         throw err;
     }
 }
