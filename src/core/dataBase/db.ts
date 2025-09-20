@@ -7,12 +7,12 @@ import { unitOfMeasurement } from "../../api/unitOfMeasurement/unitofMeasurement
 import { ItemGroupCategory } from "../../api/itemGrouping-Categorization/itemGroupCategory.model";
 import { FinancialYearCreation } from "../../api/financialYearCreation/financialYearCreation.model";
 import { OtpPinSetting } from "../../api/otpPinSetting/otpPinSetting.model";
-import { UserDetails } from "../../api/userRegistration/userRegistration.model";
 import { employeeRegistration } from "../../api/employeeRegistration/employee.model";
 import { Brand } from "../../api/brand/brand.model";
 import { newCustomer } from "../../api/newCustomer/newCustomer.model";
 import { leads } from "../../api/leads/leads.model";
 import { licenseSubscription } from "../../api/licenseSubscription/licenseSubscription.model";
+import { UserDetails } from "../../api/userRegistration/userRegistration.model";
 
 const Entities = [
   itemMaster,
@@ -26,7 +26,8 @@ const Entities = [
   Brand,
   newCustomer,
   leads,
-  licenseSubscription
+  licenseSubscription,
+  
 ]
 
 export const appSource = new DataSource({

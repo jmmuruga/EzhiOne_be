@@ -18,7 +18,7 @@ export class UserDetails {
     password: string
     @Column()
     confirmpassword: string
-    @Column({default: true})
+    @Column({ default: true })
     status: boolean
     @Column()
     companyId: string
@@ -30,4 +30,17 @@ export class UserDetails {
     created_at: Date
     @UpdateDateColumn()
     updated_at: Date
+}
+@Entity()
+export class otpStore {
+    @PrimaryGeneratedColumn()
+    id: number
+    @Column()
+    userId: string
+    @Column()
+    otp: string
+    @CreateDateColumn()
+    created_At: Date
+    @UpdateDateColumn()
+    updated_At: Date
 }

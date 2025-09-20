@@ -44,3 +44,8 @@ export function decrypter(data: string) {
     decrypted += decipher.final("utf8");
     return decrypted;
 }
+
+export function generateOpt(): string {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    return otp;
+}
