@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addUpdateUserDetails, deleteUserDetails, getResgiterUserId, getUserDetails, getUserId, SendOtpNewAdminUser, updateUserStatus } from "./userRegistration.service";
+import { addUpdateUserDetails, deleteUserDetails, forgetPasswordSendOtp, getResgiterUserId, getUserDetails, getUserId, SendOtpNewAdminUser, superAdminResigteration, updatePassword, updateUserStatus, VerifyOtpUser } from "./userRegistration.service";
 
 const userDetailsRouter = Router()
 
@@ -10,6 +10,10 @@ userDetailsRouter.post('/updateUserStatus', (req, res) => { updateUserStatus(req
 userDetailsRouter.delete('/deleteUserDetails/:userId/:companyId', (req, res) => { deleteUserDetails(req, res) });
 userDetailsRouter.get('/SendOtpNewAdminUser/:userId/:userName/:Email/:Mobile', (req, res) => { SendOtpNewAdminUser(req, res) })
 userDetailsRouter.get('/getResgiterUserId', (req, res) => { getResgiterUserId(req, res) });
-// userDetailsRouter.get('/verifyOtpUser', (req, res) => { VerifyOtpUser(req, res) })
+userDetailsRouter.get('/verifyOtpUser/:userId/:otp', (req, res) => { VerifyOtpUser(req, res) });
+userDetailsRouter.post('/superAdminResigteration', (req, res) => { superAdminResigteration(req, res) });
+userDetailsRouter.get('/forgetPasswordSendOtp/:Email', (req, res) => { forgetPasswordSendOtp(req, res) });
+userDetailsRouter.post('/updatePassword', (req, res) => { updatePassword(req, res) });
+
 
 export default userDetailsRouter;

@@ -45,8 +45,8 @@ app.use('/userDetailsRouter', cors(corsOptions), userDetailsRouter);
 app.use('/employeeRouter', cors(corsOptions), employeeRouter);
 app.use('/brandRouter', cors(corsOptions), brandRouter);
 app.use('/newCustomerRouter', cors(corsOptions), newCustomerRouter);
-app.use('/leadsRouter', cors(corsOptions), leadsRouter)
-app.use('/licenseRouter', cors(corsOptions), licenseRouter)
+app.use('/leadsRouter', cors(corsOptions), leadsRouter);
+app.use('/licenseRouter', cors(corsOptions), licenseRouter);
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 

@@ -13,6 +13,7 @@ import { newCustomer } from "../../api/newCustomer/newCustomer.model";
 import { leads } from "../../api/leads/leads.model";
 import { licenseSubscription } from "../../api/licenseSubscription/licenseSubscription.model";
 import { UserDetails } from "../../api/userRegistration/userRegistration.model";
+import { otpStore } from "../../api/otp/otp.model";
 
 const Entities = [
   itemMaster,
@@ -27,7 +28,7 @@ const Entities = [
   newCustomer,
   leads,
   licenseSubscription,
-  
+  otpStore
 ]
 
 export const appSource = new DataSource({
