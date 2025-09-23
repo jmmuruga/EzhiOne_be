@@ -5,9 +5,8 @@ import { ValidationException } from "../../core/exception";
 import { superAdminPasswordDto, superAdminPasswordValidation, superAdminValidtion, UserDetailsDto, userDetailsValidtion } from "./userRegistration.dto";
 import { Not } from "typeorm";
 import nodemailer from 'nodemailer';
-import { encryptString, generateOpt } from "../../shared/helper";
+import { decrypter, encryptString, generateOpt } from "../../shared/helper";
 import { otpStore } from "../otp/otp.model";
-import { Console } from "console";
 
 
 export const getUserId = async (req: Request, res: Response) => {
@@ -50,6 +49,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
         const existingDetails = await userDetailsRepositry.findOneBy({
             userId: payload.userId,
         });
+        payload.password = await encryptString(payload.password, "ABCXY123");
         if (existingDetails) {
             const userNameValidation = await userDetailsRepositry.findOneBy({
                 userName: payload.userName,
@@ -137,6 +137,10 @@ export const getUserDetails = async (req: Request, res: Response) => {
             .createQueryBuilder("")
             .where({ companyId: companyId })
             .getMany();
+        userRegistration.forEach(element => {
+            element.password = decrypter(element.password);
+            element.confirmpassword = decrypter(element.confirmpassword);
+        });
         res.status(200).send({
             Result: userRegistration,
         });
@@ -236,7 +240,6 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
         }
 
         const GeneratedOtp = generateOpt();
-        console.log(GeneratedOtp, "generated otp");
 
         // // Save OTP in otpStore table
         // const otpRepo = appSource.getRepository(otpStore);
@@ -259,7 +262,7 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
         // const Generatedotp = generateOpt();
         response = await transporter.sendMail({
             from: "savedatain@gmail.com",
-            to: "savedatasaranya@gmail.com",
+            to: "savedataakshaya03@gmail.com",
             subject: `OTP to register ${userName}`,
             text: `Please enter the OTP: ${GeneratedOtp} to Register a Super Admin account
      User Name: ${userName} , Email: ${Email} , Mobile Number: ${Mobile}`,
@@ -269,15 +272,12 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
             userId: userId,
             otp: GeneratedOtp
         };
-        // console.log(GeneratedOtp, 'generated otp')
         // //save otp
-        // console.log(otpTablePayload, 'payload')
         await otpRepo.save(otpTablePayload);
         res.status(200).send({
             IsSuccess: "OTP sent successfully",
         });
     } catch (error) {
-        // console.log(error, 'error')
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -312,14 +312,9 @@ export const getResgiterUserId = async (req: Request, res: Response) => {
 export const VerifyOtpUser = async (req: Request, res: Response) => {
     try {
         const { userId, otp } = req.params;
-        // const { otp } = req.query;
         if (!userId || !otp) {
             throw new ValidationException("Invalid userId or otp received");
         }
-        // const { userId, otp } = req.params;
-        // if (+userId == 0 || +otp == 0) {
-        //     throw new ValidationException("Invalid userId or otp received");
-        // }
         const OtpRepo = appSource.getRepository(otpStore);
         await OtpRepo
             .createQueryBuilder()
@@ -365,6 +360,7 @@ export const superAdminResigteration = async (req: Request, res: Response) => {
             payload.confirmpassword,
             "ABCXY123"
         );
+        payload.companyId = '1'
         await userRepository.save(payload);
         res.status(200).send({
             IsSuccess: "User Registered successfully",
@@ -382,7 +378,6 @@ export const superAdminResigteration = async (req: Request, res: Response) => {
 export const forgetPasswordSendOtp = async (req: Request, res: Response) => {
     const Email = req.params.Email;
     try {
-        console.log(Email, 'called')
         const userRepository = await appSource.getRepository(UserDetails);
         let user = await userRepository.findOneBy({
             Email: Email,
@@ -425,13 +420,11 @@ export const forgetPasswordSendOtp = async (req: Request, res: Response) => {
             userId: user.userId,
             otp: Generatedotp,
         };
-        console.log(Generatedotp, "generated otp");
         await otpRepo.save(otpTablePayload);
         res.status(200).send({
             Result: user,
         });
     } catch (error) {
-        console.log(error, 'error')
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error,
@@ -442,7 +435,6 @@ export const forgetPasswordSendOtp = async (req: Request, res: Response) => {
 
 export const updatePassword = async (req: Request, res: Response) => {
     const payload: superAdminPasswordDto = req.body;
-    console.log(payload,"user")
     const userRepository = await appSource.getRepository(UserDetails);
     const CheckUser = await userRepository.findOneBy({
         userId: payload.userId,
@@ -455,21 +447,16 @@ export const updatePassword = async (req: Request, res: Response) => {
         if (validationResponse.error) {
             throw new ValidationException(validationResponse.error?.message);
         }
-        // payload.password = await encryptString(payload.password, "ABCXY123");
-        // payload.confirmpassword = await encryptString(
-        //     payload.confirmpassword,
-        //     "ABCXY123"
-        // );
         const encryptedPassword = await encryptString(payload.password, "ABCXY123");
         const encryptedConfirmPassword = await encryptString(payload.confirmpassword, "ABCXY123");
 
         await userRepository
             .createQueryBuilder()
-            .update(UserDetails) // ✅ specify entity here
+            .update(UserDetails)
             .set({
                 password: encryptedPassword,
-                confirmpassword: encryptedConfirmPassword, // ✅ match entity field name
-                updated_at: new Date(), // optional: update timestamp
+                confirmpassword: encryptedConfirmPassword,
+                updated_at: new Date(),
             })
             .where("userId = :userId", { userId: payload.userId })
             .execute();
@@ -478,7 +465,6 @@ export const updatePassword = async (req: Request, res: Response) => {
             IsSuccess: "Password updated successfully",
         });
     } catch (error) {
-        console.log(error,"error")
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -488,3 +474,91 @@ export const updatePassword = async (req: Request, res: Response) => {
     }
 };
 
+export const signIn = async (req: Request, res: Response) => {
+    try {
+        const { EmailorMobile, password } = req.params;
+        const encryptedPassword = await encryptString(password, "ABCXY123");
+        const userRepository = appSource.getRepository(UserDetails);
+        let user = await userRepository.findOneBy({ Email: EmailorMobile });
+        if (!user) {
+            user = await userRepository.findOneBy({ Mobile: EmailorMobile });
+        }
+
+        if (!user) {
+            throw new ValidationException("Invalid Email or Mobile!");
+        }
+        if (user.password != encryptedPassword) {
+            throw new ValidationException("Incorrect Password!");
+        }
+
+        res.status(200).send({
+            IsSuccess: "Signed In Successfully",
+        });
+
+    } catch (error) {
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                message: error?.message,
+            });
+        }
+        res.status(500).send(error);
+    }
+};
+
+export const resetUserPasswordOtp = async (req: Request, res: Response) => {
+    const Email = req.params.Email;
+    try {
+        const userRepository = await appSource.getRepository(UserDetails);
+        let user = await userRepository.findOneBy({
+            Email: Email,
+        });
+        if (!user) {
+            user = await userRepository.findOneBy({
+                Mobile: Email,
+            });
+        }
+        if (!user) {
+            throw new ValidationException("User not found");
+        }
+        if (user.userType === "5") {
+            throw new ValidationException("Super Admin cannot change password here");
+        }
+        if (!user.status) {
+            throw new ValidationException("User is Inactive, Please contact Admin");
+        }
+        let response: any;
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            port: 465,
+            secure: false,
+            auth: {
+                user: "savedatain@gmail.com",
+                pass: "unpk bcsy ibhp wzrm",
+            },
+        });
+        const { userName, Mobile, } = user;
+        const Generatedotp = generateOpt();
+        response = await transporter.sendMail({
+            from: "savedatain@gmail.com",
+            to: "savedataakshaya03@gmail.com",
+            subject: `OTP to register ${userName}`,
+            text: `Please enter the OTP: ${Generatedotp} to Register a Super Admin account
+     User Name: ${userName} , Email: ${Email} , Mobile Number: ${Mobile}`,
+        });
+        const otpRepo = appSource.getRepository(otpStore);
+        const otpTablePayload = {
+            userId: user.userId,
+            otp: Generatedotp,
+        };
+        await otpRepo.save(otpTablePayload);
+        res.status(200).send({
+            Result: user,
+        });
+    } catch (error) {
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                message: error,
+            });
+        }
+    }
+};

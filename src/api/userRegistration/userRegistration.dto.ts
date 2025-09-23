@@ -30,7 +30,7 @@ export interface UserDetailsStatusDto {
 export const userDetailsValidtion = Joi.object({
     userId: Joi.string().required(),
     userName: Joi.string().required(),
-    Email: Joi.string().email().required(),
+    Email: Joi.string().required(),
     Mobile: Joi.string().required(),
     userType: Joi.string().required(),
     password: Joi.string().required(),
@@ -55,10 +55,9 @@ export const superAdminValidtion = Joi.object({
     companyId: Joi.boolean().optional().allow(null, ''),
 })
 
-
 export  const superAdminPasswordValidation  =  Joi.object({  
     userId: Joi.string().required(),
-    Email : Joi.string().email().required(),
+    Email : Joi.string().required(),
     password: Joi.string().required(),
     confirmpassword: Joi.string().required(),
 })
