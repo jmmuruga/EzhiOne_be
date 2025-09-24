@@ -5,39 +5,39 @@ import { OtpPinSetting } from "./otpPinSetting.model";
 import { OtpPinSettingDto, otpPinSettingValidtion } from "./otpPinSetting.dto";
 import { decrypter, encryptString } from "../../shared/helper";
 
-export const getOtpPinId = async (req: Request, res: Response) => {
-    try {
-        const companyId = req.params.companyId;
-        const otpPinRepostory =
-            appSource.getRepository(OtpPinSetting);
-        let otpPinId = await otpPinRepostory.query(
-            `SELECT otpPinId
-            FROM [${process.env.DB_NAME}].[dbo].[otp_pin_setting] where companyId = '${companyId}'
-            Group by otpPinId
-            ORDER BY CAST(otpPinId AS INT) DESC;`
-        );
-        let id = "0";
-        if (otpPinId?.length > 0) {
-            id = otpPinId[0].otpPinId;
-        }
-        const finalRes = Number(id) + 1;
-        res.status(200).send({
-            Result: finalRes,
-        });
-    } catch (error) {
-        if (error instanceof ValidationException) {
-            return res.status(400).send({
-                message: error?.message,
-            });
-        }
-        res.status(500).send(error);
-    }
-};
+// export const getOtpPinId = async (req: Request, res: Response) => {
+//     try {
+//         const companyId = req.params.companyId;
+//         const otpPinRepostory =
+//             appSource.getRepository(OtpPinSetting);
+//         let otpPinId = await otpPinRepostory.query(
+//             `SELECT otpPinId
+//             FROM [${process.env.DB_NAME}].[dbo].[otp_pin_setting] where companyId = '${companyId}'
+//             Group by otpPinId
+//             ORDER BY CAST(otpPinId AS INT) DESC;`
+//         );
+//         let id = "0";
+//         if (otpPinId?.length > 0) {
+//             id = otpPinId[0].otpPinId;
+//         }
+//         const finalRes = Number(id) + 1;
+//         res.status(200).send({
+//             Result: finalRes,
+//         });
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({
+//                 message: error?.message,
+//             });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
 
 export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
     try {
         const payload: OtpPinSettingDto = req.body;
-
+        console.log(payload, 'incomming data')
         // Validate payload schema
         const validation = otpPinSettingValidtion.validate(payload);
         if (validation.error) {
@@ -47,9 +47,9 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
         const { addPin, editPin, deletePin } = payload;
 
         // ✅ Custom pin uniqueness validation
-        if (addPin && editPin && deletePin && addPin === editPin && addPin === deletePin) {
+        if (addPin === editPin || addPin === deletePin || editPin === deletePin) {
             return res.status(400).send({
-                message: "Add, Edit, and Delete pins cannot all be the same.",
+                message: "Add, Edit, and Delete pins must all be different.",
             });
         }
 
@@ -92,12 +92,13 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
             });
         }
     } catch (error) {
+        console.log(error, 'error')
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 

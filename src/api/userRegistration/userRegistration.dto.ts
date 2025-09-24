@@ -52,12 +52,13 @@ export const superAdminValidtion = Joi.object({
     status: Joi.boolean().optional().allow(null, ''),
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
-    companyId: Joi.boolean().optional().allow(null, ''),
+    // companyId: Joi.string().optional().allow(null, ''),
+    companyId: Joi.string().required(),
 })
 
-export  const superAdminPasswordValidation  =  Joi.object({  
+export const superAdminPasswordValidation = Joi.object({
     userId: Joi.string().required(),
-    Email : Joi.string().required(),
+    Email: Joi.string().required(),
     password: Joi.string().required(),
     confirmpassword: Joi.string().required(),
 })

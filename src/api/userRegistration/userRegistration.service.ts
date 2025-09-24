@@ -50,6 +50,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             userId: payload.userId,
         });
         payload.password = await encryptString(payload.password, "ABCXY123");
+        payload.confirmpassword = await encryptString(payload.confirmpassword, "ABCXY123");
         if (existingDetails) {
             const userNameValidation = await userDetailsRepositry.findOneBy({
                 userName: payload.userName,
@@ -145,6 +146,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
             Result: userRegistration,
         });
     } catch (error) {
+        console.log(error.message, 'error')
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -492,7 +494,7 @@ export const signIn = async (req: Request, res: Response) => {
         }
 
         res.status(200).send({
-            IsSuccess: "Signed In Successfully",
+            IsSuccess: "Signed In Successfully", Result: user,
         });
 
     } catch (error) {

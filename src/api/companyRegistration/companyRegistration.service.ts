@@ -67,6 +67,17 @@ export const addUpdateCompanyRegistration = async (
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist");
             }
+
+            if (payload.branchMobile) {
+                const mobileValidation = await companyRegistrationRepositry.findOneBy({
+                    branchMobile: payload.branchMobile,
+                    companyId: Not(payload.companyId),
+                });
+                if (mobileValidation) {
+                    throw new ValidationException("Mobile Number Already Exist");
+                }
+            }
+
             await companyRegistrationRepositry
                 .update({ companyId: payload.companyId }, payload)
                 .then(() => {
@@ -80,7 +91,7 @@ export const addUpdateCompanyRegistration = async (
                             message: error?.message,
                         });
                     }
-                    res.status(500).send(error);
+                    res.status(500).send(error.message);
                 });
             return;
         } else {
@@ -100,11 +111,13 @@ export const addUpdateCompanyRegistration = async (
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist");
             }
-            const mobileValidation = await companyRegistrationRepositry.findOneBy({
-                branchMobile: payload.branchMobile,
-            });
-            if (mobileValidation) {
-                throw new ValidationException("Mobile Number Already Exist");
+            if (payload.branchMobile) {
+                const mobileValidation = await companyRegistrationRepositry.findOneBy({
+                    branchMobile: payload.branchMobile,
+                });
+                if (mobileValidation) {
+                    throw new ValidationException("Mobile Number Already Exist");
+                }
             }
             await companyRegistrationRepositry.save(payload);
             res.status(200).send({
@@ -117,7 +130,7 @@ export const addUpdateCompanyRegistration = async (
                 message: error?.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
@@ -137,7 +150,7 @@ export const getCompanyDetails = async (req: Request, res: Response) => {
                 message: error?.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
