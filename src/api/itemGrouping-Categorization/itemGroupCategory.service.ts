@@ -155,40 +155,102 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
     }
 };
 
+// export const deleteItemGroupCategory = async (req: Request, res: Response) => {
+//     try {
+//         const itemGroupId = req.params.itemGroupId;
+//         const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
+//         const companyId = req.params.companyId;
+//         // Check if company exists
+//         const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({
+//             itemGroupId: itemGroupId, companyId: companyId
+//         });
+
+//         if (!itemGrpCatFound) {
+//             throw new ValidationException("Company Not Found");
+//         }
+
+//         const usedInItemMaster = await itemGroupCategoryRepositry
+//             .createQueryBuilder("item-master")
+//             .where("item-master.itemGroup= :itemGroupId", {
+//                 itemGroupId,
+//             })
+//             .getCount();
+//         if (usedInItemMaster > 0) {
+//             throw new ValidationException(
+//                 "Unable to delete Item Group Nmae. It is currently used by Item Master."
+//             );
+//         }
+
+//         // Delete using QueryBuilder (explicit cast to string)
+//         const deleteResult = await itemGroupCategoryRepositry
+//             .createQueryBuilder()
+//             .delete()
+//             .from(ItemGroupCategory)
+//             .where({ itemGroupId: itemGroupId, companyId: companyId })
+//             .execute();
+
+//         if (deleteResult.affected && deleteResult.affected > 0) {
+//             res.status(200).send({
+//                 IsSuccess: `${itemGrpCatFound.groupName} Deleted Successfully`,
+//             });
+//         } else {
+//             res.status(500).send({ message: "Delete failed: No rows affected" });
+//         }
+
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({ message: error.message });
+//         }
+//         res.status(500).send(error.message);
+//     }
+// };
+
 export const deleteItemGroupCategory = async (req: Request, res: Response) => {
     try {
         const itemGroupId = req.params.itemGroupId;
-        const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
         const companyId = req.params.companyId;
-        // Check if company exists
+
+        const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
+
+        // Check if the category exists
         const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({
-            itemGroupId: itemGroupId, companyId: companyId
+            itemGroupId: itemGroupId,
+            companyId: companyId
         });
 
         if (!itemGrpCatFound) {
-            throw new ValidationException("Company Not Found");
+            return res.status(404).json({ message: "Item Group Not Found" });
         }
 
-        // Delete using QueryBuilder (explicit cast to string)
-        const deleteResult = await itemGroupCategoryRepositry
-            .createQueryBuilder()
-            .delete()
-            .from(ItemGroupCategory)
-            .where({ itemGroupId: itemGroupId, companyId: companyId })
-            .execute();
+        // Check if this group is used in Item Master
+        const usedInItemMaster = await appSource.getRepository(itemMaster)
+            .createQueryBuilder("itemMaster")
+            .where("itemMaster.itemGroup = :itemGroupId", { itemGroupId })
+            .andWhere("itemMaster.companyId = :companyId", { companyId })
+            .getCount();
+
+        if (usedInItemMaster > 0) {
+            return res.status(400).json({
+                message: `Unable to delete "${itemGrpCatFound.groupName}". It is currently used in Item Master.`
+            });
+        }
+
+        // Delete the item group
+        const deleteResult = await itemGroupCategoryRepositry.delete({
+            itemGroupId: itemGroupId,
+            companyId: companyId
+        });
 
         if (deleteResult.affected && deleteResult.affected > 0) {
-            res.status(200).send({
-                IsSuccess: `${itemGrpCatFound.groupName} Deleted Successfully`,
+            return res.status(200).json({
+                IsSuccess: `${itemGrpCatFound.groupName} Deleted Successfully`
             });
         } else {
-            res.status(500).send({ message: "Delete failed: No rows affected" });
+            return res.status(500).json({ message: "Delete failed: No rows affected" });
         }
 
     } catch (error) {
-        if (error instanceof ValidationException) {
-            return res.status(400).send({ message: error.message });
-        }
-        res.status(500).send(error);
+        console.error('Delete Item Group Error:', error);
+        res.status(500).json({ message: error?.message || 'Internal Server Error' });
     }
 };

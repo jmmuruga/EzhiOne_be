@@ -59,6 +59,7 @@ export const addUpdateEmployeeRegistration = async (
             if (emailValidation) {
                 throw new ValidationException("Email Address Already Exist");
             }
+
             const mobileValidation = await employeeRegistrationRepositry.findOneBy({
                 employeeMobile: payload.employeeMobile,
                 employeeId: Not(payload.employeeId),
@@ -67,6 +68,13 @@ export const addUpdateEmployeeRegistration = async (
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
             }
+
+            if (payload.workStatus === 'resigned') {
+                payload.status = false;
+            } else {
+                payload.status = true;
+            }
+
             await employeeRegistrationRepositry
                 .update({ employeeId: payload.employeeId }, payload)
                 .then(() => {
@@ -98,6 +106,13 @@ export const addUpdateEmployeeRegistration = async (
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
             }
+
+            if (payload.workStatus === 'resigned') {
+                payload.status = false;
+            } else {
+                payload.status = true;
+            }
+
             await employeeRegistrationRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "Employee Details Added successfully",

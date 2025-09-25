@@ -48,6 +48,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
         const userDetailsRepositry = appSource.getRepository(UserDetails);
         const existingDetails = await userDetailsRepositry.findOneBy({
             userId: payload.userId,
+            companyId: payload.companyId
         });
         payload.password = await encryptString(payload.password, "ABCXY123");
         payload.confirmpassword = await encryptString(payload.confirmpassword, "ABCXY123");
@@ -347,12 +348,13 @@ export const superAdminResigteration = async (req: Request, res: Response) => {
         const userRepository = await appSource.getRepository(UserDetails);
         const userDetailFromDb = await userRepository
             .createQueryBuilder("userDetail")
-            .where("userdetail.userId = :userId", {
-                userId: payload.userId,
-            })
-            .orWhere("userdetail.Email = :Email", {
-                Email: payload.Email,
-            })
+            // .where("userDetail.userId = :userId", {
+            //     userId: payload.userId,
+            // })
+            // .orWhere("userDetail.Email = :Email", {
+            //     Email: payload.Email,
+            // })
+            .where("userDetail.Email = :Email", { Email: payload.Email })
             .getMany();
         if (userDetailFromDb?.length) {
             throw new ValidationException("User alredy exist");

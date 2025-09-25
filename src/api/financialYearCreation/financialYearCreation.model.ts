@@ -14,7 +14,7 @@ export class FinancialYearCreation {
     fromDate: string
     @Column()
     toDate: string
-    @Column({default: true})
+    @Column({default: false})
     status: boolean
     @Column({ 'nullable': true })
     cuid: string

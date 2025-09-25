@@ -52,16 +52,6 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
         });
 
         if (existingDetails) {
-            const groupNameValidation = await financialYearRepositry.findOneBy({
-                companyName: payload.companyName,
-                financialYearId: Not(payload.financialYearId),
-                companyId: payload.companyId
-            });
-            if (groupNameValidation) {
-                throw new ValidationException(
-                    "Company Name already exists for this Company."
-                );
-            }
             // Update existing record
             await financialYearRepositry
                 .update({ financialYearId: payload.financialYearId }, payload)
@@ -74,16 +64,6 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
                     res.status(500).send(error);
                 });
         } else {
-            const groupNameValidation = await financialYearRepositry.findOneBy({
-                companyName: payload.companyName,
-                financialYearId: Not(payload.financialYearId),
-                companyId: payload.companyId
-            });
-            if (groupNameValidation) {
-                throw new ValidationException(
-                    "Company Name already exists for this Company."
-                );
-            }
             // Add new record
             await financialYearRepositry.save(payload);
             res.status(200).send({
@@ -133,12 +113,22 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
         if (!financialYearFound) {
             throw new ValidationException("Financia Year Not Found");
         }
+
+        if (financialYearstatus.status === true) {
+            await financialYearRepositry
+                .createQueryBuilder()
+                .update(FinancialYearCreation)
+                .set({ status: false })
+                .where("companyId = :companyId", { companyId: financialYearstatus.companyId })
+                .execute();
+        }
+
         await financialYearRepositry
             .createQueryBuilder()
             .update(FinancialYearCreation)
             .set({ status: financialYearstatus.status })
-            .where({ financialYearId: financialYearstatus.financialYearId })
-            .andWhere({ companyId: financialYearstatus.companyId })
+            .where("financialYearId = :financialYearId", { financialYearId: financialYearstatus.financialYearId })
+            .andWhere("companyId = :companyId", { companyId: financialYearstatus.companyId })
             .execute();
         res.status(200).send({
             IsSuccess: `Status for ${financialYearFound.companyName} Changed Successfully`,
@@ -170,7 +160,7 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
             .createQueryBuilder()
             .delete()
             .from(FinancialYearCreation)
-            .where({ financialYearId: financialYearId,  companyId: companyId })
+            .where({ financialYearId: financialYearId, companyId: companyId })
             .execute();
 
         if (deleteResult.affected && deleteResult.affected > 0) {
