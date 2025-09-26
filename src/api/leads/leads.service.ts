@@ -52,7 +52,7 @@ export const addUpdateLeads = async (
         });
         if (existingDetails) {
             await leadsRepositry
-                .update({ leadsId: payload.leadsId }, payload)
+                .update({ leadsId: payload.leadsId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "leads Updated Successfully",

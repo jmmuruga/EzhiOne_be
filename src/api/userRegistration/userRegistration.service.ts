@@ -8,7 +8,6 @@ import nodemailer from 'nodemailer';
 import { decrypter, encryptString, generateOpt } from "../../shared/helper";
 import { otpStore } from "../otp/otp.model";
 
-
 export const getUserId = async (req: Request, res: Response) => {
     try {
         const companyId = req.params.companyId;
@@ -78,7 +77,7 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
                 throw new ValidationException("Mobile Number Already Exist ");
             }
             await userDetailsRepositry
-                .update({ userId: payload.userId }, payload)
+                .update({ userId: payload.userId, companyId: payload.companyId }, payload)
                 .then(async (r) => {
                     res.status(200).send({
                         IsSuccess: "User Details Updated SuccessFully",

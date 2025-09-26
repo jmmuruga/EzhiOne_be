@@ -4,6 +4,7 @@ import { unitOfMeasurement } from "./unitofMeasurement.model";
 import { ValidationException } from "../../core/exception";
 import { unitOfMeasurementDto, unitOfMeasurementValidation } from "./unitofMeasurement.dto";
 import { Not } from "typeorm";
+import { itemMaster } from "../itemMaster/itemMaster.model";
 
 export const getUnitMeasurementId = async (req: Request, res: Response) => {
     try {
@@ -64,7 +65,7 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
             }
             // Update existing record
             await unitMeasurementRepository
-                .update({ unitMeasurementId: payload.unitMeasurementId }, payload)
+                .update({ unitMeasurementId: payload.unitMeasurementId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Item Details Updated Successfully",
@@ -157,14 +158,27 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
 export const deleteUnitMeasurement = async (req: Request, res: Response) => {
     try {
         const unitMeasurementId = req.params.unitMeasurementId;
-        const unitMeasurementRepository = appSource.getRepository(unitOfMeasurement);
         const companyId = req.params.companyId;
-        // Check if company exists
+        const unitMeasurementRepository = appSource.getRepository(unitOfMeasurement);
+        const itemMasterRepo = appSource.getRepository(itemMaster);
+        // Check if unit exists
         const unitMeasurementFound = await unitMeasurementRepository.findOneBy({
             unitMeasurementId: unitMeasurementId, companyId: companyId
         });
         if (!unitMeasurementFound) {
             throw new ValidationException("Company Not Found");
+        }
+
+        const usedInItemMaster = await itemMasterRepo
+            .createQueryBuilder("item_master")
+            .where("item_master.unit = :unitMeasurementId", { unitMeasurementId })
+            .andWhere("item_master.companyId = :companyId", { companyId })
+            .getCount();
+
+        if (usedInItemMaster > 0) {
+            throw new ValidationException(
+                `Unable to delete unit. It is currently in use.`
+            );
         }
 
         // Delete using QueryBuilder (explicit cast to string)

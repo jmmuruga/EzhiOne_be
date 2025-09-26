@@ -54,7 +54,7 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
         if (existingDetails) {
             // Update existing record
             await financialYearRepositry
-                .update({ financialYearId: payload.financialYearId }, payload)
+                .update({ financialYearId: payload.financialYearId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Financial Year Details Updated Successfully",

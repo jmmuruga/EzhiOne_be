@@ -63,7 +63,7 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
             }
 
             await itemMasterRepository
-                .update({ itemMasterId: payload.itemMasterId }, payload)
+                .update({ itemMasterId: payload.itemMasterId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Item Details Updated Successfully",

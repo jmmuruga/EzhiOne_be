@@ -69,7 +69,7 @@ export const addUpdateNewCustomer = async (
                 throw new ValidationException("Mobile Number Already Exist");
             }
             await newCustomerRepositry
-                .update({ customerId: payload.customerId }, payload)
+                .update({ customerId: payload.customerId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Customer Details Updated Successfully",

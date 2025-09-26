@@ -65,7 +65,7 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
             }
             // Update existing record
             await itemGroupCategoryRepositry
-                .update({ itemGroupId: payload.itemGroupId }, payload)
+                .update({ itemGroupId: payload.itemGroupId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Item Details Updated Successfully",

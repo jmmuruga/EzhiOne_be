@@ -53,7 +53,7 @@ export const addUpdateLicenseSubscription = async (
         });
         if (existingDetails) {
             await licenseRepositry
-                .update({ licenseId: payload.licenseId }, payload)
+                .update({ licenseId: payload.licenseId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "leads Updated Successfully",

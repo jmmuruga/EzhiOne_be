@@ -76,7 +76,7 @@ export const addUpdateEmployeeRegistration = async (
             }
 
             await employeeRegistrationRepositry
-                .update({ employeeId: payload.employeeId }, payload)
+                .update({ employeeId: payload.employeeId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Employee Details Updated Successfully",

@@ -49,7 +49,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
 
         if (existingDetails) {
             await brandRepositry
-                .update({ brandId: payload.brandId }, payload)
+                .update({ brandId: payload.brandId, companyId: payload.companyId }, payload)
                 .then(() => {
                     res.status(200).send({
                         IsSuccess: "Brand Details Updated Successfully",

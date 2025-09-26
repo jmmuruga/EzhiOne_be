@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addUpdateOtpPinSetting, deleteOtpPin, getOtpPinDetails, updateOtpPinStatus } from "./otpPinSetting.service";
+import { addUpdateOtpPinSetting, deleteOtpPin, getOtpPinDetails, sendOtp, updateOtpPinStatus, VerifyOtp } from "./otpPinSetting.service";
 
 const otpPinRouter = Router();
 
@@ -8,5 +8,7 @@ otpPinRouter.post('/addUpdateOtpPinSetting', (req, res) => { addUpdateOtpPinSett
 otpPinRouter.get('/getOtpPinDetails/:companyId', (req, res) => { getOtpPinDetails(req, res) });
 otpPinRouter.post('/updateOtpPinStatus', (req, res) => { updateOtpPinStatus(req, res) });
 otpPinRouter.delete('/deleteOtpPin/:otpPinId/:companyId', (req, res) => { deleteOtpPin(req, res) });
+otpPinRouter.get('/sendOtp/:companyId', (req, res) => { sendOtp(req, res) });
+otpPinRouter.get('/VerifyOtpUser/:otp', (req, res) => { VerifyOtp(req, res) })
 
 export default otpPinRouter;
