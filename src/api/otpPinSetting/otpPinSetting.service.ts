@@ -41,6 +41,11 @@ import { companyRegistration } from "../companyRegistration/companyRegistration.
 export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
     try {
         const payload: OtpPinSettingDto = req.body;
+        console.log(payload, 'incoming')
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         // Validate payload schema
         const validation = otpPinSettingValidtion.validate(payload);
         if (validation.error) {
@@ -76,6 +81,11 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
         });
 
         if (existingDetails) {
+            payload.cuid = userId
+            payload.muid = payload.muid || userId
+        }
+
+        if (existingDetails) {
             // Update existing record
             await otpPinRepostory
                 .update({ otpPinId: payload.otpPinId, companyId: payload.companyId }, payload)
@@ -88,6 +98,9 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
                     res.status(500).send(error);
                 });
         } else {
+
+            payload.cuid = userId
+            payload.muid = null
             // Add new record
             await otpPinRepostory.save(payload);
             res.status(200).send({

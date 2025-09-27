@@ -37,6 +37,11 @@ export const getFinancialYearId = async (req: Request, res: Response) => {
 export const addUpdateFinancialYear = async (req: Request, res: Response) => {
     try {
         const payload: financialYearCreationDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         // Validate payload schema
         const validation = financialYearCreationValidation.validate(payload);
         if (validation.error) {
@@ -50,6 +55,10 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
             financialYearId: payload.financialYearId,
             companyId: payload.companyId
         });
+        if (existingDetails) {
+            payload.cuid = existingDetails.cuid;
+            payload.muid = payload.muid || userId;
+        }
 
         if (existingDetails) {
             // Update existing record
@@ -64,6 +73,9 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
                     res.status(500).send(error);
                 });
         } else {
+            payload.cuid = userId;
+            payload.muid = null;
+
             // Add new record
             await financialYearRepositry.save(payload);
             res.status(200).send({

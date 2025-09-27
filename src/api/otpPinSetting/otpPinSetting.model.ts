@@ -12,7 +12,7 @@ export class OtpPinSetting {
     editPin: string
     @Column()
     deletePin: string
-    @Column({default: true})
+    @Column({ default: true })
     status: boolean
     @Column()
     companyId: string
@@ -24,4 +24,6 @@ export class OtpPinSetting {
     created_at: Date
     @UpdateDateColumn()
     updated_at: Date
+    @Column({ default: false })
+    isEdited: boolean
 }

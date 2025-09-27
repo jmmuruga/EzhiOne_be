@@ -24,6 +24,7 @@ export interface companyRegistrationDto {
     companyImage: string
     cuid?: string
     muid?: string
+    isEdited: boolean
 }
 
 export const companyRegistrationValidation = Joi.object({
@@ -46,10 +47,11 @@ export const companyRegistrationValidation = Joi.object({
     officeNumber: Joi.string().required(),
     branch: Joi.string().required(),
     branchMobile: Joi.string().optional().allow(null, ""),
-    status: Joi.boolean().optional(),
+    status: Joi.boolean().optional().allow(null, ""),
     cuid: Joi.string().optional(),
     muid: Joi.string().optional(),
     companyImage: Joi.string().optional().allow(null, ""),
+    isEdited: Joi.boolean().optional().allow(null, ""),
 })
 
 export interface companyRegistrationStatusDto {

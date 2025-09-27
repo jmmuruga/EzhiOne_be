@@ -14,7 +14,7 @@ export class FinancialYearCreation {
     fromDate: string
     @Column()
     toDate: string
-    @Column({default: false})
+    @Column({ default: false })
     status: boolean
     @Column({ 'nullable': true })
     cuid: string
@@ -26,4 +26,6 @@ export class FinancialYearCreation {
     updated_at: Date;
     @Column()
     companyId: string
+    @Column({ default: false })
+    isEdited: boolean
 }

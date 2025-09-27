@@ -38,6 +38,11 @@ export const createItemMasterID = async (req: Request, res: Response) => {
 export const addUpdateItemMaster = async (req: Request, res: Response) => {
     try {
         const payload: itemMasterDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = itemMasterValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -60,6 +65,10 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
                 throw new ValidationException(
                     "item name already exists for this Item."
                 );
+            }
+            if (existingDetails) {
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
             }
 
             await itemMasterRepository
@@ -90,6 +99,9 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
                 );
             }
         }
+
+        payload.cuid = userId;
+        payload.muid = null;
 
         await itemMasterRepository.save(payload);
         res.status(200).send({

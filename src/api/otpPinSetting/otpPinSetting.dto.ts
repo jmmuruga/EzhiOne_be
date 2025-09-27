@@ -7,8 +7,9 @@ export interface OtpPinSettingDto {
     deletePin: string
     status: boolean
     companyId: string
-    cuid?: string
-    muid?: string
+    cuid: string
+    muid: string
+    isEdited: boolean
 }
 
 export interface otpPinSettingStatusDto {
@@ -26,4 +27,6 @@ export const otpPinSettingValidtion = Joi.object({
     companyId: Joi.string().required(),
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
+    isEdited: Joi.boolean().optional().allow(null, ''),
+
 })

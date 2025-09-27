@@ -12,6 +12,7 @@ export interface itemMasterDto {
   cuid: string,
   muid: string
   companyId: string
+  isEdited: boolean
 }
 
 export const itemMasterValidation = Joi.object({
@@ -26,6 +27,7 @@ export const itemMasterValidation = Joi.object({
   cuid: Joi.string().optional().allow(null, ''),
   muid: Joi.string().optional().allow(null, ''),
   companyId: Joi.string().required(),
+  isEdited: Joi.boolean().optional().allow(null, ''),
 });
 
 export interface itemMasterStatusDto {

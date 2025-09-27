@@ -22,4 +22,6 @@ export class unitOfMeasurement {
     updated_at: Date;
     @Column()
     companyId: string
+    @Column({ default: false })
+    isEdited: boolean
 }

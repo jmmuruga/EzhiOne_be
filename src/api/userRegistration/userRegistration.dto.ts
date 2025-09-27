@@ -12,6 +12,7 @@ export interface UserDetailsDto {
     cuid?: string
     muid?: string
     companyId: string
+    isEdited: boolean
 }
 
 export interface superAdminPasswordDto {
@@ -19,6 +20,7 @@ export interface superAdminPasswordDto {
     Email: string;
     password: string;
     confirmpassword: string;
+    isEdited: boolean
 }
 
 export interface UserDetailsStatusDto {
@@ -39,6 +41,7 @@ export const userDetailsValidtion = Joi.object({
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
     companyId: Joi.string().required(),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })
 
 export const superAdminValidtion = Joi.object({
@@ -54,6 +57,8 @@ export const superAdminValidtion = Joi.object({
     muid: Joi.string().optional().allow(null, ''),
     // companyId: Joi.string().optional().allow(null, ''),
     companyId: Joi.string().required(),
+    isEdited: Joi.boolean().optional().allow(null, ''),
+
 })
 
 export const superAdminPasswordValidation = Joi.object({

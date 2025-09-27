@@ -54,4 +54,6 @@ export class companyRegistration {
     created_at: Date;
     @UpdateDateColumn()
     updated_at: Date;
+    @Column({ default: false })
+    isEdited: boolean
 }

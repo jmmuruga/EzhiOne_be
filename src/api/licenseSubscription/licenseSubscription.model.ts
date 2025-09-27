@@ -26,5 +26,6 @@ export class licenseSubscription {
     created_at: Date;
     @UpdateDateColumn()
     updated_at: Date;
-
+    @Column({ default: false })
+    isEdited: boolean
 }

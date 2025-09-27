@@ -8,7 +8,7 @@ export class ItemGroupCategory {
     itemGroupId: string;
     @Column()
     groupName: string
-    @Column({default: true})
+    @Column({ default: true })
     status: boolean
     @Column({ nullable: true })
     cuid: string
@@ -20,4 +20,6 @@ export class ItemGroupCategory {
     updated_at: Date
     @Column()
     companyId: string
+    @Column({ default: false })
+    isEdited: boolean
 }

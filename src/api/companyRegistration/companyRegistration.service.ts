@@ -39,6 +39,11 @@ export const addUpdateCompanyRegistration = async (
 ) => {
     try {
         const payload: companyRegistrationDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = companyRegistrationValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -76,6 +81,16 @@ export const addUpdateCompanyRegistration = async (
                 if (mobileValidation) {
                     throw new ValidationException("Mobile Number Already Exist");
                 }
+            }
+            if (existingDetails) {
+
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
+
+                await companyRegistrationRepositry.update(
+                    { companyId: payload.companyId },
+                    payload
+                );
             }
 
             await companyRegistrationRepositry
@@ -119,6 +134,10 @@ export const addUpdateCompanyRegistration = async (
                     throw new ValidationException("Mobile Number Already Exist");
                 }
             }
+
+            payload.cuid = userId;
+            payload.muid = null;
+
             await companyRegistrationRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "Company Details Added successfully",

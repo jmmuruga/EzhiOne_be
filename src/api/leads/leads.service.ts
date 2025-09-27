@@ -39,6 +39,11 @@ export const addUpdateLeads = async (
 ) => {
     try {
         const payload: leadsDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid
+
         const validation = leadsValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -50,6 +55,12 @@ export const addUpdateLeads = async (
             leadsId: payload.leadsId,
             companyId: payload.companyId
         });
+
+        if (existingDetails) {
+            payload.cuid = existingDetails.cuid
+            payload.muid = payload.muid || userId
+        }
+
         if (existingDetails) {
             await leadsRepositry
                 .update({ leadsId: payload.leadsId, companyId: payload.companyId }, payload)
@@ -68,6 +79,10 @@ export const addUpdateLeads = async (
                 });
             return;
         } else {
+
+            payload.cuid = userId;
+            payload.muid = null;
+
             await leadsRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "leads Added Successfully",

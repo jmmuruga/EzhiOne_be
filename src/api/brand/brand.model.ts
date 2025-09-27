@@ -25,5 +25,7 @@ export class Brand {
     updatedAt: string;
     @Column()
     companyId: string
+    @Column({default: false})
+    isEdited : boolean
 }
 

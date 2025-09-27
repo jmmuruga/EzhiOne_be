@@ -40,6 +40,11 @@ export const addUpdateLicenseSubscription = async (
 ) => {
     try {
         const payload: licenseSubscriptionDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = licenseSubscriptionValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -51,6 +56,12 @@ export const addUpdateLicenseSubscription = async (
             licenseId: payload.licenseId,
             companyId: payload.companyId
         });
+
+        if (existingDetails) {
+            payload.cuid = existingDetails.cuid;
+            payload.muid = payload.muid || userId;
+        }
+
         if (existingDetails) {
             await licenseRepositry
                 .update({ licenseId: payload.licenseId, companyId: payload.companyId }, payload)
@@ -69,6 +80,10 @@ export const addUpdateLicenseSubscription = async (
                 });
             return;
         } else {
+
+            payload.cuid = userId;
+            payload.muid = null;
+
             await licenseRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "leads Added Successfully",

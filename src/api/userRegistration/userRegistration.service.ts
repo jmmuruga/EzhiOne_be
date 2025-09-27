@@ -40,6 +40,11 @@ export const getUserId = async (req: Request, res: Response) => {
 export const addUpdateUserDetails = async (req: Request, res: Response) => {
     try {
         const payload: UserDetailsDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = userDetailsValidtion.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -76,6 +81,12 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist ");
             }
+
+            if (existingDetails) {
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
+            }
+
             await userDetailsRepositry
                 .update({ userId: payload.userId, companyId: payload.companyId }, payload)
                 .then(async (r) => {
@@ -114,6 +125,10 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist ");
             }
+
+            payload.cuid = userId
+            payload.muid = null
+
             await userDetailsRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "User Details Added successFully",
@@ -146,7 +161,6 @@ export const getUserDetails = async (req: Request, res: Response) => {
             Result: userRegistration,
         });
     } catch (error) {
-        console.log(error.message, 'error')
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,

@@ -40,6 +40,10 @@ export const addUpdateEmployeeRegistration = async (
 ) => {
     try {
         const payload: employeeRegistration = req.body;
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = employeeRegistrationValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -50,6 +54,12 @@ export const addUpdateEmployeeRegistration = async (
             employeeId: payload.employeeId,
             companyId: payload.companyId
         });
+
+        if (existingDetails) {
+            payload.cuid = existingDetails.cuid;
+            payload.muid = payload.muid || userId;
+        }
+
         if (existingDetails) {
             const emailValidation = await employeeRegistrationRepositry.findOneBy({
                 empEmail: payload.empEmail,
@@ -112,6 +122,9 @@ export const addUpdateEmployeeRegistration = async (
             } else {
                 payload.status = true;
             }
+
+            payload.cuid = userId;
+            payload.muid = null;
 
             await employeeRegistrationRepositry.save(payload);
             res.status(200).send({

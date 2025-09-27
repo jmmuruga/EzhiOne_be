@@ -34,4 +34,6 @@ export class leads {
     createdAt: string;
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt: string;
+    @Column({ default: false })
+    isEdited: boolean
 }

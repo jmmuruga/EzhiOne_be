@@ -38,6 +38,11 @@ export const getGroupCategoryId = async (req: Request, res: Response) => {
 export const addUpdateItemGroupCategory = async (req: Request, res: Response) => {
     try {
         const payload: ItemGroupCategoryDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         // Validate payload schema
         const validation = itemGroupCategoryValidation.validate(payload);
         if (validation.error) {
@@ -63,6 +68,10 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
                     "Grout Name already exists for this Company."
                 );
             }
+            if (existingDetails) {
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
+            }
             // Update existing record
             await itemGroupCategoryRepositry
                 .update({ itemGroupId: payload.itemGroupId, companyId: payload.companyId }, payload)
@@ -85,6 +94,10 @@ export const addUpdateItemGroupCategory = async (req: Request, res: Response) =>
                     "Grout Name already exists for this Company."
                 );
             }
+
+            payload.cuid = userId;
+            payload.muid = null;
+
             // Add new record
             await itemGroupCategoryRepositry.save(payload);
             res.status(200).send({

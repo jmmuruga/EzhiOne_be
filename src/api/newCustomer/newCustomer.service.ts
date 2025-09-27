@@ -40,6 +40,11 @@ export const addUpdateNewCustomer = async (
 ) => {
     try {
         const payload: newCustomerDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         const validation = newCustomerValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -68,6 +73,12 @@ export const addUpdateNewCustomer = async (
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
             }
+
+            if (existingDetails) {
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
+            }
+
             await newCustomerRepositry
                 .update({ customerId: payload.customerId, companyId: payload.companyId }, payload)
                 .then(() => {
@@ -99,6 +110,10 @@ export const addUpdateNewCustomer = async (
             if (mobileValidation) {
                 throw new ValidationException("Mobile Number Already Exist");
             }
+
+            payload.cuid = userId;
+            payload.muid = null;
+            
             await newCustomerRepositry.save(payload);
             res.status(200).send({
                 IsSuccess: "Customer Details Added Successfully",

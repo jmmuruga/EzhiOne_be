@@ -10,6 +10,7 @@ export interface licenseSubscriptionDto {
     companyId: string
     cuid: string
     muid: string
+    isEdited: boolean
 }
 
 export interface licenseSubscriptionStatusDto {
@@ -28,4 +29,5 @@ export const licenseSubscriptionValidation = Joi.object({
     companyId: Joi.string().required(),
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })

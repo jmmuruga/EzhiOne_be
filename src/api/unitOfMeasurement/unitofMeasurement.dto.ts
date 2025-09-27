@@ -5,9 +5,10 @@ export interface unitOfMeasurementDto {
     unitShort: string
     unitName: string
     status: boolean
-    cuid?: string
-    muid?: string
+    cuid: string
+    muid: string
     companyId: string
+    isEdited: boolean
 }
 
 export const unitOfMeasurementValidation = Joi.object({
@@ -17,7 +18,8 @@ export const unitOfMeasurementValidation = Joi.object({
     status: Joi.boolean().optional().allow(null, ''),
     companyId: Joi.string().required(),
     cuid: Joi.string().optional().allow(null, ''),
-    muid: Joi.string().optional().allow(null, '')
+    muid: Joi.string().optional().allow(null, ''),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })
 
 export interface unitOfMeasurementStatusDto {

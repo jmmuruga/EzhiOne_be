@@ -19,6 +19,7 @@ export interface newCustomerDto {
     cuid: string;
     muid: string;
     companyId: string
+    isEdited: boolean
 }
 
 export interface newCustomerStatusDto {
@@ -46,4 +47,6 @@ export const newCustomerValidation = Joi.object({
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
     companyId: Joi.string().required(),
+    status: Joi.boolean().optional().allow(null, ''),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })

@@ -21,7 +21,8 @@ export interface EmployeeRegistrationDto {
     status?: boolean;
     cuid?: string;
     muid?: string;
-    companyId: string
+    companyId: string;
+    isEdited: boolean;
 }
 
 export interface employeeRegistrationStatusDto {
@@ -52,4 +53,5 @@ export const employeeRegistrationValidation = Joi.object({
     cuid: Joi.string().allow(null, ''),
     muid: Joi.string().allow(null, ''),
     companyId: Joi.string().required(),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })

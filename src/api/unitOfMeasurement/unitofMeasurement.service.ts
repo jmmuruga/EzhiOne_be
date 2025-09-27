@@ -38,6 +38,11 @@ export const getUnitMeasurementId = async (req: Request, res: Response) => {
 export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
     try {
         const payload: unitOfMeasurementDto = req.body;
+
+        const userId = payload.isEdited
+            ? payload.muid
+            : payload.cuid;
+
         // Validate payload schema
         const validation = unitOfMeasurementValidation.validate(payload);
         if (validation.error) {
@@ -63,6 +68,11 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
                     "UnitShort already exists for this Company."
                 );
             }
+
+            if (existingDetails) {
+                payload.cuid = existingDetails.cuid;
+                payload.muid = payload.muid || userId;
+            }
             // Update existing record
             await unitMeasurementRepository
                 .update({ unitMeasurementId: payload.unitMeasurementId, companyId: payload.companyId }, payload)
@@ -85,6 +95,10 @@ export const addUpdateUnitMeasurement = async (req: Request, res: Response) => {
                     "UnitShort already exists for this Company."
                 );
             }
+
+            payload.cuid = userId;
+            payload.muid = null;
+
             // Add new record
             await unitMeasurementRepository.save(payload);
             res.status(200).send({

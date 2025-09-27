@@ -32,9 +32,9 @@ export class newCustomer {
     district: string
     @Column()
     pincode: string
-    @Column({nullable: true})
+    @Column({ nullable: true })
     companyName: string
-    @Column({default: true})
+    @Column({ default: true })
     status: boolean
     @Column({ nullable: true })
     cuid: string;
@@ -46,5 +46,6 @@ export class newCustomer {
     updatedAt: string;
     @Column()
     companyId: string
-
+    @Column({ default: false })
+    isEdited: boolean
 }
