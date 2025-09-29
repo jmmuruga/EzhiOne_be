@@ -25,7 +25,7 @@ export const otpPinSettingValidtion = Joi.object({
     deletePin: Joi.string().required(),
     status: Joi.boolean().optional().allow(null, ''),
     companyId: Joi.string().required(),
-    cuid: Joi.string().optional().allow(null, ''),
+    cuid: Joi.string().required(),
     muid: Joi.string().optional().allow(null, ''),
     isEdited: Joi.boolean().optional().allow(null, ''),
 

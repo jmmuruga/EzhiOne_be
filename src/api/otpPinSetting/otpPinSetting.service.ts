@@ -81,7 +81,6 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
         });
 
         if (existingDetails) {
-            payload.cuid = userId
             payload.muid = payload.muid || userId
         }
 
@@ -220,50 +219,6 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
     }
 };
 
-// export const sendOtp = async (req: Request, res: Response) => {
-//     const Email = req.params.Email;
-//     try {
-//         const userRepository = await appSource.getRepository(UserDetails);
-//         let user = await userRepository.findOneBy({
-//             Email: Email,
-//         });
-//         let response: any;
-//         const transporter = nodemailer.createTransport({
-//             service: "gmail",
-//             port: 465,
-//             secure: false,
-//             auth: {
-//                 user: "savedatain@gmail.com",
-//                 pass: "unpk bcsy ibhp wzrm",
-//             },
-//         });
-//         const { userName, Mobile, } = user;
-//         const Generatedotp = generateOpt();
-//         response = await transporter.sendMail({
-//             from: "savedatain@gmail.com",
-//             to: "savedataakshaya03@gmail.com",
-//             subject: `OTP to register ${userName}`,
-//             text: `Please enter the OTP: ${Generatedotp} to Register a Super Admin account
-//      User Name: ${userName} , Email: ${Email} , Mobile Number: ${Mobile}`,
-//         });
-//         const otpRepo = appSource.getRepository(otpStore);
-//         const otpTablePayload = {
-//             userId: user.userId,
-//             otp: Generatedotp,
-//         };
-//         await otpRepo.save(otpTablePayload);
-//         res.status(200).send({
-//             Result: user,
-//         });
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error,
-//             });
-//         }
-//     }
-// };
-
 export const sendOtp = async (req: Request, res: Response) => {
     try {
         const companyId = req.params.companyId; // get companyId from route
@@ -297,8 +252,7 @@ export const sendOtp = async (req: Request, res: Response) => {
             from: "savedatain@gmail.com",
             to: "savedataakshaya03@gmail.com", // send OTP to the user's email
             subject: `OTP to register ${userName}`,
-            text: `Please enter the OTP: ${Generatedotp} to Register a Super Admin account
-User Name: ${userName}, Email: ${Email}, Mobile Number: ${Mobile}`,
+            text: `Please enter the OTP: ${Generatedotp} to update OTP pin settings of ${userName}, Email: ${Email}, Mobile Number: ${Mobile}`,
         });
 
         // Save OTP in database
@@ -320,32 +274,6 @@ User Name: ${userName}, Email: ${Email}, Mobile Number: ${Mobile}`,
         res.status(500).send({ message: "Internal server error", error });
     }
 };
-
-// export const VerifyOtp = async (req: Request, res: Response) => {
-//     try {
-//         const { companyId, otp } = req.params;
-//         if (!companyId || !otp) {
-//             throw new ValidationException("Invalid companyId or otp received");
-//         }
-//         const OtpRepo = appSource.getRepository(otpStore);
-//         await OtpRepo
-//             .createQueryBuilder()
-//             .delete()
-//             .from(otpStore)
-//             .where({ companyId: companyId })
-//             .execute();
-//         res.status(200).send({
-//             IsSuccess: `Otp Verified Successfully...!`,
-//         });
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error.message,
-//             });
-//         }
-//         res.status(500).send(error);
-//     }
-// };
 
 export const VerifyOtp = async (req: Request, res: Response) => {
     try {
