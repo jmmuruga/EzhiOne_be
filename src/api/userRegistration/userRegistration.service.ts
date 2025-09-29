@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { UserDetails } from "./userRegistration.model";
 import { ValidationException } from "../../core/exception";
-import { superAdminPasswordDto, superAdminPasswordValidation, superAdminValidtion, UserDetailsDto, userDetailsValidtion } from "./userRegistration.dto";
+import { superAdminPasswordDto, superAdminPasswordValidation, superAdminValidtion, UserDetailsDto, UserDetailsStatusDto, userDetailsValidtion } from "./userRegistration.dto";
 import { Not } from "typeorm";
 import nodemailer from 'nodemailer';
-import { decrypter, encryptString, generateOpt } from "../../shared/helper";
+import { decrypter, encryptString, generateOpt, getChangedProperty } from "../../shared/helper";
 import { otpStore } from "../otp/otp.model";
+import { InsertLog } from "../logs/logs.service";
+import { logsDto } from "../logs/logs.dto";
 
 export const getUserId = async (req: Request, res: Response) => {
     try {
@@ -38,13 +40,12 @@ export const getUserId = async (req: Request, res: Response) => {
 };
 
 export const addUpdateUserDetails = async (req: Request, res: Response) => {
+    const payload: UserDetailsDto = req.body;
+    const companyId = payload.companyId;
+    const userId = payload.isEdited
+        ? payload.muid
+        : payload.cuid;
     try {
-        const payload: UserDetailsDto = req.body;
-
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
         const validation = userDetailsValidtion.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -90,11 +91,30 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             await userDetailsRepositry
                 .update({ userId: payload.userId, companyId: payload.companyId }, payload)
                 .then(async (r) => {
+                    let updatedFields: string = await getChangedProperty([payload], [existingDetails])
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `User Details Updated For"${payload.userName}" Updated -  Changes : ${updatedFields}By User - `,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
                     res.status(200).send({
                         IsSuccess: "User Details Updated SuccessFully",
                     });
                 })
                 .catch(async (error) => {
+
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating User Details ${payload.userName} - ${error.message} By User - `,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
@@ -130,11 +150,31 @@ export const addUpdateUserDetails = async (req: Request, res: Response) => {
             payload.muid = null
 
             await userDetailsRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `User Details ${payload.userName} Added By User - `,
+                companyId: companyId
+            }
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "User Details Added successFully",
             });
         }
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding User Details ${payload.userName} - ${error.message} By User - `,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -171,13 +211,13 @@ export const getUserDetails = async (req: Request, res: Response) => {
 };
 
 export const updateUserStatus = async (req: Request, res: Response) => {
+    const userstatus: UserDetailsStatusDto = req.body;
+    const userRegisterStatus: UserDetails = req.body;
+    const userDetailsRepositry = appSource.getRepository(UserDetails);
+    const userregisterFound = await userDetailsRepositry.findOneBy({
+        userId: userRegisterStatus.userId, companyId: userRegisterStatus.companyId
+    });
     try {
-        const userRegisterStatus: UserDetails = req.body;
-        const userDetailsRepositry =
-            appSource.getRepository(UserDetails);
-        const userregisterFound = await userDetailsRepositry.findOneBy({
-            userId: userRegisterStatus.userId, companyId: userRegisterStatus.companyId
-        });
         if (!userregisterFound) {
             throw new ValidationException("User Not Found");
         }
@@ -188,6 +228,15 @@ export const updateUserStatus = async (req: Request, res: Response) => {
             .where({ userId: userRegisterStatus.userId })
             .andWhere({ companyId: userRegisterStatus.companyId })
             .execute();
+        const logsPayload: logsDto = {
+            userId: userstatus.satusUpdatedUser,
+            userName: null,
+            statusCode: '200',
+            message: `User Status For ${userregisterFound.userName} changed to ${userstatus.status} By User - `,
+            companyId: userstatus.companyId
+        }
+        console.log(logsPayload, 'logpay')
+        await InsertLog(logsPayload);
         res.status(200).send({
             IsSuccess: `Status for ${userregisterFound.userName} Changed Successfully`,
         });
@@ -201,12 +250,53 @@ export const updateUserStatus = async (req: Request, res: Response) => {
     }
 };
 
+// export const updateUserStatus = async (req: Request, res: Response) => {
+//     const userstatus: UserDetailsStatusDto = req.body;
+//     // const userstatus: UserDetails = req.body;
+//     const userDetailsRepositry =
+//         appSource.getRepository(UserDetails);
+//     const userregisterFound = await userDetailsRepositry.findOneBy({
+//         userId: userstatus.userId, companyId: userstatus.companyId
+//     });
+//     try {
+//         if (!userregisterFound) {
+//             throw new ValidationException("User Not Found");
+//         }
+//         await userDetailsRepositry
+//             .createQueryBuilder()
+//             .update(UserDetails)
+//             .set({ status: userstatus.status })
+//             .where({ userId: userstatus.userId })
+//             .andWhere({ companyId: userstatus.companyId })
+//             .execute();
+//         const logsPayload: logsDto = {
+//             userId: userstatus.satusUpdatedUser,
+//             userName: null,
+//             statusCode: '200',
+//             message: `User Status For ${userregisterFound.userName} changed to ${userstatus.status} By User - `,
+//             companyId: userstatus.companyId
+//         }
+//         console.log(logsPayload, 'logpay')
+//         await InsertLog(logsPayload);
+//         res.status(200).send({
+//             IsSuccess: `Status for ${userregisterFound.userName} Changed Successfully`,
+//         });
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({
+//                 message: error?.message,
+//             });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
+
 export const deleteUserDetails = async (req: Request, res: Response) => {
     try {
-        const companyId = req.params.companyId;
-        const userId = req.params.userId;
+        const { userId, deletedUserId, companyId } = req.params;
+        // const companyId, deletedUserId = req.params.companyId;
+        // const userId = req.params.userId;
         const userDetailsRepositry = appSource.getRepository(UserDetails);
-
         const userregisterFound = await userDetailsRepositry.findOneBy({ userId });
         if (!userregisterFound) {
             throw new ValidationException("User Not Found");
@@ -219,6 +309,14 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
             .from(UserDetails)
             .where({ userId: userId, companyId: companyId })
             .execute();
+        const logsPayload: logsDto = {
+            userId: deletedUserId,
+            userName: null,
+            statusCode: "200",
+            message: `User Details : ${userregisterFound.userName} Deleted By User -  `,
+            companyId: companyId,
+        };
+        await InsertLog(logsPayload);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({

@@ -4,6 +4,9 @@ import { ValidationException } from "../../core/exception";
 import { FinancialYearCreation } from "./financialYearCreation.model";
 import { financialYearCreationDto, financialYearCreationValidation } from "./financialYearCreation.dto";
 import { Not } from "typeorm";
+import { InsertLog } from "../logs/logs.service";
+import { logsDto } from "../logs/logs.dto";
+import { getChangedProperty } from "../../shared/helper";
 
 export const getFinancialYearId = async (req: Request, res: Response) => {
     try {
@@ -34,15 +37,71 @@ export const getFinancialYearId = async (req: Request, res: Response) => {
     }
 };
 
+// export const addUpdateFinancialYear = async (req: Request, res: Response) => {
+//     try {
+//         const payload: financialYearCreationDto = req.body;
+
+//         const userId = payload.isEdited
+//             ? payload.muid
+//             : payload.cuid;
+
+//         // Validate payload schema
+//         const validation = financialYearCreationValidation.validate(payload);
+//         if (validation.error) {
+//             throw new ValidationException(validation.error.message);
+//         }
+
+//         const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
+
+//         // Check if record exists
+//         const existingDetails = await financialYearRepositry.findOneBy({
+//             financialYearId: payload.financialYearId,
+//             companyId: payload.companyId
+//         });
+//         if (existingDetails) {
+//             payload.cuid = existingDetails.cuid;
+//             payload.muid = payload.muid || userId;
+//         }
+
+//         if (existingDetails) {
+//             // Update existing record
+//             await financialYearRepositry
+//                 .update({ financialYearId: payload.financialYearId, companyId: payload.companyId }, payload)
+//                 .then(() => {
+//                     res.status(200).send({
+//                         IsSuccess: "Financial Year Details Updated Successfully",
+//                     });
+//                 })
+//                 .catch((error) => {
+//                     res.status(500).send(error);
+//                 });
+//         } else {
+//             payload.cuid = userId;
+//             payload.muid = null;
+
+//             // Add new record
+//             await financialYearRepositry.save(payload);
+//             res.status(200).send({
+//                 IsSuccess: "Financial Year Details Added Successfully",
+//             });
+//         }
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({
+//                 message: error.message,
+//             });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
+
 export const addUpdateFinancialYear = async (req: Request, res: Response) => {
+    const payload: financialYearCreationDto = req.body;
+    const userId = payload.isEdited ? payload.muid : payload.cuid;
+    const companyId = payload.companyId;
+
     try {
-        const payload: financialYearCreationDto = req.body;
-
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
-        // Validate payload schema
+        // Validate payload
         const validation = financialYearCreationValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -55,21 +114,40 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
             financialYearId: payload.financialYearId,
             companyId: payload.companyId
         });
+
         if (existingDetails) {
             payload.cuid = existingDetails.cuid;
             payload.muid = payload.muid || userId;
-        }
 
-        if (existingDetails) {
             // Update existing record
             await financialYearRepositry
                 .update({ financialYearId: payload.financialYearId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `Financial Year Updated for "${payload.companyName}" - Changes: ${updatedFields} By User - `,
+                        companyId: companyId
+                    };
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "Financial Year Details Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating Financial Year ${payload.companyName} - ${error.message} By User - `,
+                        companyId: companyId
+                    };
+                    await InsertLog(logsPayload);
+
                     res.status(500).send(error);
                 });
         } else {
@@ -78,11 +156,30 @@ export const addUpdateFinancialYear = async (req: Request, res: Response) => {
 
             // Add new record
             await financialYearRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `Financial Year Added for "${payload.companyName}" By User - `,
+                companyId: companyId
+            };
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "Financial Year Details Added Successfully",
             });
         }
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding/Updating Financial Year ${payload.companyName} - ${error.message} By User - `,
+            companyId: companyId
+        };
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,

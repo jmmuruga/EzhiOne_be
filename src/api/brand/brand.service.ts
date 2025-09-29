@@ -3,6 +3,9 @@ import { appSource } from "../../core/dataBase/db";
 import { Brand } from "./brand.model";
 import { ValidationException } from "../../core/exception";
 import { brandDto, brandValidation } from "./brand.dto";
+import { InsertLog } from "../logs/logs.service";
+import { logsDto } from "../logs/logs.dto";
+import { getChangedProperty } from "../../shared/helper";
 
 export const createBrandId = async (req: Request, res: Response) => {
     try {
@@ -33,14 +36,73 @@ export const createBrandId = async (req: Request, res: Response) => {
     }
 };
 
+// export const addUpdateBrand = async (req: Request, res: Response) => {
+//     try {
+//         const payload: brandDto = req.body;
+
+//         const userId = payload.isEdited
+//             ? payload.muid
+//             : payload.cuid;
+
+//         const validation = brandValidation.validate(payload);
+//         if (validation.error) {
+//             throw new ValidationException(validation.error.message);
+//         }
+
+//         const brandRepositry = appSource.getRepository(Brand);
+//         const existingDetails = await brandRepositry.findOneBy({
+//             brandId: payload.brandId,
+//             companyId: payload.companyId
+//         });
+//         if (existingDetails) {
+//             payload.cuid = existingDetails.cuid;
+//             payload.muid = payload.muid || userId;
+//         }
+
+//         if (existingDetails) {
+//             await brandRepositry
+//                 .update({ brandId: payload.brandId, companyId: payload.companyId }, payload)
+//                 .then(() => {
+//                     res.status(200).send({
+//                         IsSuccess: "Brand Details Updated Successfully",
+//                     });
+//                 })
+//                 .catch((error) => {
+//                     if (error instanceof ValidationException) {
+//                         return res.status(400).send({
+//                             message: error?.message,
+//                         });
+//                     }
+//                     res.status(500).send(error);
+//                 });
+
+//             return;
+//         } else {
+//             payload.cuid = userId;
+//             payload.muid = null;
+
+//             await brandRepositry.save(payload);
+//             res.status(200).send({
+//                 IsSuccess: "Brand Details Added Successfully",
+//             });
+//         }
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({
+//                 message: error?.message,
+//             });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
+
 export const addUpdateBrand = async (req: Request, res: Response) => {
+    const payload: brandDto = req.body;
+    const companyId = payload.companyId;
+    const userId = payload.isEdited ? payload.muid : payload.cuid;
+
     try {
-        const payload: brandDto = req.body;
-
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
+        // Validation
         const validation = brandValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
@@ -51,20 +113,38 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
             brandId: payload.brandId,
             companyId: payload.companyId
         });
+
         if (existingDetails) {
             payload.cuid = existingDetails.cuid;
             payload.muid = payload.muid || userId;
-        }
 
-        if (existingDetails) {
             await brandRepositry
                 .update({ brandId: payload.brandId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `Brand Details Updated For "${payload.brandName}" Updated - Changes: ${updatedFields} By User - `,
+                        companyId: companyId
+                    };
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "Brand Details Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating Brand Details ${payload.brandName} - ${error.message} By User - `,
+                        companyId: companyId
+                    };
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
@@ -73,18 +153,35 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
                     res.status(500).send(error);
                 });
 
-            return;
         } else {
-
             payload.cuid = userId;
             payload.muid = null;
 
             await brandRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `Brand Details "${payload.brandName}" Added By User - `,
+                companyId: companyId
+            };
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "Brand Details Added Successfully",
             });
         }
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding/Updating Brand Details ${payload.brandName} - ${error.message} By User - `,
+            companyId: companyId
+        };
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -93,6 +190,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
         res.status(500).send(error);
     }
 };
+
 
 export const getBrandDetails = async (req: Request, res: Response) => {
     try {
@@ -175,3 +273,4 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
         res.status(500).send(error);
     }
 };
+

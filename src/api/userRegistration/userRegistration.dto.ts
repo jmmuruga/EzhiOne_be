@@ -27,6 +27,7 @@ export interface UserDetailsStatusDto {
     userId: string
     status: boolean
     companyId: string
+    satusUpdatedUser: string
 }
 
 export const userDetailsValidtion = Joi.object({

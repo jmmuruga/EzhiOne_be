@@ -16,6 +16,7 @@ export interface brandStatusDto {
     brandId: string;
     status: boolean;
     companyId: string
+    satusUpdatedUser: string
 }
 
 export const brandValidation = Joi.object({
@@ -27,5 +28,5 @@ export const brandValidation = Joi.object({
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
     companyId: Joi.string().required(),
-     isEdited: Joi.boolean().optional().allow(null, ''),
+    isEdited: Joi.boolean().optional().allow(null, ''),
 })
