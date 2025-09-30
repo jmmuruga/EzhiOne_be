@@ -7,6 +7,6 @@ employeeRouter.get('/getEmployeeId/:companyId', (req, res) => { getEmployeeId(re
 employeeRouter.post('/addUpdateEmployeeRegistration', (req, res) => { addUpdateEmployeeRegistration(req, res) });
 employeeRouter.get('/getEmployeeDetails/:companyId', (req, res) => { getEmployeeDetails(req, res) });
 employeeRouter.post('/updateEmployeeStatus', (req, res) => { updateEmployeeStatus(req, res) });
-employeeRouter.delete('/deleteEmployee/:employeeId/:companyId', (req, res) => { deleteEmployee(req, res) });
+employeeRouter.delete('/deleteEmployee/:employeeId/:companyId/:userId', (req, res) => { deleteEmployee(req, res) });
 
 export default employeeRouter;

@@ -16,7 +16,8 @@ export interface financialYearCreationDto {
 export interface financialYearStatusDto {
     financialYearId: string;
     status: boolean;
-    companyId: string
+    companyId: string;
+    userId: string;
 }
 
 export const financialYearCreationValidation = Joi.object({

@@ -57,4 +57,5 @@ export const companyRegistrationValidation = Joi.object({
 export interface companyRegistrationStatusDto {
     companyId: string;
     status: boolean;
+    userId: string
 }

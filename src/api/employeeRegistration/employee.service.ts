@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { employeeRegistration } from "./employee.model";
 import { ValidationException } from "../../core/exception";
-import { employeeRegistrationValidation } from "./employee.dto";
+import { employeeRegistrationStatusDto, employeeRegistrationValidation } from "./employee.dto";
 import { Not } from "typeorm";
 import { InsertLog } from "../logs/logs.service";
 import { logsDto } from "../logs/logs.dto";
@@ -307,13 +307,13 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
 };
 
 export const updateEmployeeStatus = async (req: Request, res: Response) => {
+    const employeeStatus: employeeRegistrationStatusDto = req.body;
+    const employeeRegistrationRepositry =
+        appSource.getRepository(employeeRegistration);
+    const emlpoyeeFound = await employeeRegistrationRepositry.findOneBy({
+        employeeId: employeeStatus.employeeId, companyId: employeeStatus.companyId
+    });
     try {
-        const employeeStatus: employeeRegistration = req.body;
-        const employeeRegistrationRepositry =
-            appSource.getRepository(employeeRegistration);
-        const emlpoyeeFound = await employeeRegistrationRepositry.findOneBy({
-            employeeId: employeeStatus.employeeId, companyId: employeeStatus.companyId
-        });
         if (!emlpoyeeFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -323,6 +323,15 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
             .set({ status: employeeStatus.status })
             .where({ employeeId: employeeStatus.employeeId, companyId: employeeStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: employeeStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Employee Status For ${emlpoyeeFound.employeeName} changed to ${emlpoyeeFound.status} By User`,
+            companyId: employeeStatus.companyId
+        }
+        await InsertLog(logsPayload);
 
         res.status(200).send({
             IsSuccess: `Status for ${emlpoyeeFound.employeeName} Changed Successfully`,
@@ -338,9 +347,9 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteEmployee = async (req: Request, res: Response) => {
+    const { employeeId, userId, companyId } = req.params;
+
     try {
-        const employeeId = req.params.employeeId;
-        const companyId = req.params.companyId;
         const employeeRegistrationRepositry = appSource.getTreeRepository(employeeRegistration);
         const employeeFound = await employeeRegistrationRepositry.findOneBy({
             employeeId: employeeId,
@@ -355,6 +364,15 @@ export const deleteEmployee = async (req: Request, res: Response) => {
             .from(employeeRegistration)
             .where({ employeeId: employeeId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Employee : ${employeeFound.employeeName} Deleted By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
 
         res.status(200).send({
             IsSuccess: `${employeeFound.employeeName} Deleted Successfully `,

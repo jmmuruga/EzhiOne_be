@@ -210,51 +210,10 @@ export const getUserDetails = async (req: Request, res: Response) => {
     }
 };
 
-export const updateUserStatus = async (req: Request, res: Response) => {
-    const userstatus: UserDetailsStatusDto = req.body;
-    const userRegisterStatus: UserDetails = req.body;
-    const userDetailsRepositry = appSource.getRepository(UserDetails);
-    const userregisterFound = await userDetailsRepositry.findOneBy({
-        userId: userRegisterStatus.userId, companyId: userRegisterStatus.companyId
-    });
-    try {
-        if (!userregisterFound) {
-            throw new ValidationException("User Not Found");
-        }
-        await userDetailsRepositry
-            .createQueryBuilder()
-            .update(UserDetails)
-            .set({ status: userRegisterStatus.status })
-            .where({ userId: userRegisterStatus.userId })
-            .andWhere({ companyId: userRegisterStatus.companyId })
-            .execute();
-        const logsPayload: logsDto = {
-            userId: userstatus.satusUpdatedUser,
-            userName: null,
-            statusCode: '200',
-            message: `User Status For ${userregisterFound.userName} changed to ${userstatus.status} By User - `,
-            companyId: userstatus.companyId
-        }
-        console.log(logsPayload, 'logpay')
-        await InsertLog(logsPayload);
-        res.status(200).send({
-            IsSuccess: `Status for ${userregisterFound.userName} Changed Successfully`,
-        });
-    } catch (error) {
-        if (error instanceof ValidationException) {
-            return res.status(400).send({
-                message: error?.message,
-            });
-        }
-        res.status(500).send(error);
-    }
-};
-
 // export const updateUserStatus = async (req: Request, res: Response) => {
 //     const userstatus: UserDetailsStatusDto = req.body;
-//     // const userstatus: UserDetails = req.body;
-//     const userDetailsRepositry =
-//         appSource.getRepository(UserDetails);
+//     // const userRegisterStatus: UserDetails = req.body;
+//     const userDetailsRepositry = appSource.getRepository(UserDetails);
 //     const userregisterFound = await userDetailsRepositry.findOneBy({
 //         userId: userstatus.userId, companyId: userstatus.companyId
 //     });
@@ -269,14 +228,14 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 //             .where({ userId: userstatus.userId })
 //             .andWhere({ companyId: userstatus.companyId })
 //             .execute();
+
 //         const logsPayload: logsDto = {
-//             userId: userstatus.satusUpdatedUser,
+//             userId: userstatus.userId,
 //             userName: null,
 //             statusCode: '200',
-//             message: `User Status For ${userregisterFound.userName} changed to ${userstatus.status} By User - `,
+//             message: `User Status For ${userregisterFound.userName} changed to ${userstatus.status} By User - userId- `,
 //             companyId: userstatus.companyId
 //         }
-//         console.log(logsPayload, 'logpay')
 //         await InsertLog(logsPayload);
 //         res.status(200).send({
 //             IsSuccess: `Status for ${userregisterFound.userName} Changed Successfully`,
@@ -290,6 +249,51 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 //         res.status(500).send(error);
 //     }
 // };
+
+export const updateUserStatus = async (req: Request, res: Response) => {
+    const userstatus: UserDetailsStatusDto = req.body;
+    const userRepoistry = appSource.getRepository(UserDetails);
+    const userFound = await userRepoistry.findOneBy({
+        userId: userstatus.userId,
+    });
+    try {
+        if (!userFound) {
+            throw new ValidationException("User Not Found");
+        }
+        await userRepoistry
+            .createQueryBuilder()
+            .update(UserDetails)
+            .set({ status: userstatus.status })
+            .where({ userId: userstatus.userId })
+            .execute();
+        const logsPayload: logsDto = {
+            userId: userstatus.satusUpdatedUser,
+            userName: null,
+            statusCode: "200",
+            message: `User Status For ${userFound.userName} changed to ${userstatus.status} By User - `,
+            companyId: userstatus.companyId,
+        };
+        await InsertLog(logsPayload);
+        res.status(200).send({
+            IsSuccess: `Status for ${userFound.userName} Changed Successfully`,
+        });
+    } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userstatus.satusUpdatedUser,
+            userName: null,
+            statusCode: "400",
+            message: `Error While Changing User Status For ${userFound.userName} to ${userstatus.status} - ${error.message} By User - `,
+            companyId: userstatus.companyId,
+        };
+        await InsertLog(logsPayload);
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                message: error?.message,
+            });
+        }
+        res.status(500).send(error);
+    }
+};
 
 export const deleteUserDetails = async (req: Request, res: Response) => {
     try {

@@ -1,7 +1,7 @@
 import { Not } from "typeorm";
 import { appSource } from "../../core/dataBase/db";
 import { ValidationException } from "../../core/exception";
-import { companyRegistrationDto, companyRegistrationValidation } from "./companyRegistration.dto";
+import { companyRegistrationDto, companyRegistrationStatusDto, companyRegistrationValidation } from "./companyRegistration.dto";
 import { companyRegistration } from "./companyRegistration.model";
 import { Request, Response } from "express";
 import { InsertLog } from "../logs/logs.service";
@@ -329,7 +329,7 @@ export const getCompanyDetails = async (req: Request, res: Response) => {
 
 export const updateCompanyStatus = async (req: Request, res: Response) => {
     try {
-        const companystatus: companyRegistration = req.body;
+        const companystatus: companyRegistrationStatusDto = req.body;
         const companyRegistrationRepositry =
             appSource.getRepository(companyRegistration);
         const companyFound = await companyRegistrationRepositry.findOneBy({
@@ -344,6 +344,16 @@ export const updateCompanyStatus = async (req: Request, res: Response) => {
             .set({ status: companystatus.status })
             .where({ companyId: companystatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: companystatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Company Registration Status For ${companyFound.companyName} changed to ${companyFound.status} By User - userId- `,
+            companyId: companystatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${companyFound.companyName} Changed Successfully`,
         });
@@ -357,40 +367,9 @@ export const updateCompanyStatus = async (req: Request, res: Response) => {
     }
 };
 
-// export const deleteCompany = async (req: Request, res: Response) => {
-//     try {
-//         const companyId = req.params.companyId;
-//         const companyRepositry = appSource.getRepository(companyRegistration);
-//         const companyFound = await companyRepositry.findOneBy({
-//             companyId: companyId,
-//         });
-//         if (!companyFound) {
-//             throw new ValidationException("Company Not Found ");
-//         }
-//         await companyRepositry
-//             .createQueryBuilder()
-//             .delete()
-//             .from(companyRegistration)
-//             .where("companyId = :companyId", { companyId })
-//             .execute();
-//         res.status(200).send({
-//             IsSuccess: `${companyFound.companyName} Deleted Successfully `,
-//         });
-
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error.message,
-//             });
-//         }
-//         console.error("Delete Error:", error);
-//         res.status(500).send(error);
-//     }
-// };
-
 export const deleteCompany = async (req: Request, res: Response) => {
+    const { userId, companyId } = req.params;
     try {
-        const companyId = req.params.companyId; // string
         const companyRepository = appSource.getRepository(companyRegistration);
 
         // Check if company exists
@@ -407,6 +386,14 @@ export const deleteCompany = async (req: Request, res: Response) => {
             .where("companyId = :companyId", { companyId: String(companyId) })
             .execute();
 
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Company : ${companyFound.companyName} Deleted By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({

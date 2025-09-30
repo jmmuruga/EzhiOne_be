@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { ValidationException } from "../../core/exception";
 import { FinancialYearCreation } from "./financialYearCreation.model";
-import { financialYearCreationDto, financialYearCreationValidation } from "./financialYearCreation.dto";
+import { financialYearCreationDto, financialYearCreationValidation, financialYearStatusDto } from "./financialYearCreation.dto";
 import { Not } from "typeorm";
 import { InsertLog } from "../logs/logs.service";
 import { logsDto } from "../logs/logs.dto";
@@ -212,13 +212,13 @@ export const getFinancialYearDetails = async (req: Request, res: Response) => {
 };
 
 export const updateFinancialYearStatus = async (req: Request, res: Response) => {
+    const financialYearstatus: financialYearStatusDto = req.body;
+    const financialYearRepositry =
+        appSource.getRepository(FinancialYearCreation);
+    const financialYearFound = await financialYearRepositry.findOneBy({
+        financialYearId: financialYearstatus.financialYearId, companyId: financialYearstatus.companyId
+    });
     try {
-        const financialYearstatus: FinancialYearCreation = req.body;
-        const financialYearRepositry =
-            appSource.getRepository(FinancialYearCreation);
-        const financialYearFound = await financialYearRepositry.findOneBy({
-            financialYearId: financialYearstatus.financialYearId, companyId: financialYearstatus.companyId
-        });
         if (!financialYearFound) {
             throw new ValidationException("Financia Year Not Found");
         }
@@ -239,6 +239,16 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
             .where("financialYearId = :financialYearId", { financialYearId: financialYearstatus.financialYearId })
             .andWhere("companyId = :companyId", { companyId: financialYearstatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: financialYearstatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Financial Year Creation Status For ${financialYearFound.companyName} changed to ${financialYearFound.status} By User`,
+            companyId: financialYearstatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${financialYearFound.companyName} Changed Successfully`,
         });
@@ -253,9 +263,9 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
 };
 
 export const deleteFinancialYear = async (req: Request, res: Response) => {
+    const { financialYearId, userId, companyId } = req.params;
+
     try {
-        const companyId = req.params.companyId;
-        const financialYearId = req.params.financialYearId;
         const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
 
         // Check if company exists
@@ -271,6 +281,15 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
             .from(FinancialYearCreation)
             .where({ financialYearId: financialYearId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Financial Year Creation : ${financialYearFound.companyName} Deleted By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload)
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({

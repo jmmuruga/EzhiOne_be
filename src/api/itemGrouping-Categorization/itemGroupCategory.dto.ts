@@ -13,7 +13,8 @@ export interface ItemGroupCategoryDto {
 export interface ItemGroupCategoryStatusDto {
     itemGroupId: string;
     status: boolean;
-    companyId: string
+    companyId: string;
+    userId: string
 }
 
 export const itemGroupCategoryValidation = Joi.object({

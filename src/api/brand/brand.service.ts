@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { Brand } from "./brand.model";
 import { ValidationException } from "../../core/exception";
-import { brandDto, brandValidation } from "./brand.dto";
+import { brandDto, brandStatusDto, brandValidation } from "./brand.dto";
 import { InsertLog } from "../logs/logs.service";
 import { logsDto } from "../logs/logs.dto";
 import { getChangedProperty } from "../../shared/helper";
@@ -214,9 +214,10 @@ export const getBrandDetails = async (req: Request, res: Response) => {
 };
 
 export const deleteBrand = async (req: Request, res: Response) => {
+    const { userId, brandId, companyId } = req.params;
     try {
-        const brandId = req.params.brandId;
-        const companyId = req.params.companyId;
+        // const brandId = req.params.brandId;
+        // const companyId = req.params.companyId;
         const brandRepositry = appSource.getTreeRepository(Brand);
         const brandFound = await brandRepositry.findOneBy({
             brandId: brandId, companyId: companyId
@@ -230,6 +231,16 @@ export const deleteBrand = async (req: Request, res: Response) => {
             .from(Brand)
             .where({ brandId: brandId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Brand Details : ${brandFound.brandName} Deleted By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `${brandFound.brandName} Deleted Successfully `,
         });
@@ -245,7 +256,7 @@ export const deleteBrand = async (req: Request, res: Response) => {
 
 export const updateBrandStatus = async (req: Request, res: Response) => {
     try {
-        const brandStatus: Brand = req.body;
+        const brandStatus: brandStatusDto = req.body;
         const brandRepositry =
             appSource.getRepository(Brand);
         const brandFound = await brandRepositry.findOneBy({
@@ -261,6 +272,15 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
             .where({ brandId: brandStatus.brandId })
             .andWhere({ companyId: brandStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: brandStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Brand Status For ${brandFound.brandName} changed to ${brandStatus.status} By User`,
+            companyId: brandStatus.companyId
+        }
+        await InsertLog(logsPayload);
         res.status(200).send({
             IsSuccess: `Status for ${brandFound.brandName} Changed Successfully`,
         });

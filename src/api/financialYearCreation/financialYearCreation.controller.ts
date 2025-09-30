@@ -7,6 +7,6 @@ financialYearRouter.get('/financialYearId/:companyId', (req, res) => { getFinanc
 financialYearRouter.post('/addUpdateFinancialYear', (req, res) => { addUpdateFinancialYear(req, res) });
 financialYearRouter.get('/financialYearDetails/:companyId', (req, res) => { getFinancialYearDetails(req, res) });
 financialYearRouter.post('/updateFinancialYearStatus', (req, res) => { updateFinancialYearStatus(req, res) });
-financialYearRouter.delete('/deleteFinancialYear/:financialYearId/:companyId', (req, res) => { deleteFinancialYear(req, res) });
+financialYearRouter.delete('/deleteFinancialYear/:financialYearId/:companyId/:userId', (req, res) => { deleteFinancialYear(req, res) });
 
 export default financialYearRouter;

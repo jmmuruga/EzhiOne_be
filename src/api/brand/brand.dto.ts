@@ -16,7 +16,7 @@ export interface brandStatusDto {
     brandId: string;
     status: boolean;
     companyId: string
-    satusUpdatedUser: string
+    userId: string
 }
 
 export const brandValidation = Joi.object({
