@@ -2,12 +2,14 @@ import { Request, Response } from "express";
 import { ValidationException } from "../../core/exception";
 import { appSource } from "../../core/dataBase/db";
 import { OtpPinSetting } from "./otpPinSetting.model";
-import { OtpPinSettingDto, otpPinSettingValidtion } from "./otpPinSetting.dto";
-import { decrypter, encryptString, generateOpt } from "../../shared/helper";
+import { OtpPinSettingDto, otpPinSettingStatusDto, otpPinSettingValidtion } from "./otpPinSetting.dto";
+import { decrypter, encryptString, generateOpt, getChangedProperty } from "../../shared/helper";
 import { UserDetails } from "../userRegistration/userRegistration.model";
 import nodemailer from 'nodemailer';
 import { otpStore } from "../otp/otp.model";
 import { companyRegistration } from "../companyRegistration/companyRegistration.model";
+import { logsDto } from "../logs/logs.dto";
+import { InsertLog } from "../logs/logs.service";
 
 // export const getOtpPinId = async (req: Request, res: Response) => {
 //     try {
@@ -39,15 +41,17 @@ import { companyRegistration } from "../companyRegistration/companyRegistration.
 // };
 
 export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
-    try {
-        const payload: OtpPinSettingDto = req.body;
-        console.log(payload, 'incoming')
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
+    const payload: OtpPinSettingDto = req.body;
 
-        // Validate payload schema
-        const validation = otpPinSettingValidtion.validate(payload);
+    const userId = payload.isEdited
+        ? payload.muid
+        : payload.cuid;
+
+    const companyId = payload.companyId
+
+    const validation = otpPinSettingValidtion.validate(payload);
+
+    try {
         if (validation.error) {
             throw new ValidationException(validation.error.message);
         }
@@ -88,13 +92,33 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
             // Update existing record
             await otpPinRepostory
                 .update({ otpPinId: payload.otpPinId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `OTP Pin Setting Updated For "${payload.companyId}" updated - Chnages ${updatedFields} By User - `,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "OTP Pin Setting Updated Successfully",
                     });
                 })
-                .catch((error) => {
-                    res.status(500).send(error);
+                .catch(async (error) => {
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating OTP Pin Settings For "${payload.companyId}" - ${error.message} By User -`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
+                    res.status(500).send(error.message);
                 });
         } else {
 
@@ -102,11 +126,31 @@ export const addUpdateOtpPinSetting = async (req: Request, res: Response) => {
             payload.muid = null
             // Add new record
             await otpPinRepostory.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `OTP Pin Setting For "${payload.companyId}"  Added By User -`,
+                companyId: companyId
+            }
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "OTP Pin Added Successfully",
             });
         }
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding OTP Pin Setting For "${payload.companyId}" By User -`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -147,13 +191,13 @@ export const getOtpPinDetails = async (req: Request, res: Response) => {
                 message: error.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
 export const updateOtpPinStatus = async (req: Request, res: Response) => {
     try {
-        const otpPinStatus: OtpPinSetting = req.body;
+        const otpPinStatus: otpPinSettingStatusDto = req.body;
         const otpPinRepostory =
             appSource.getRepository(OtpPinSetting);
         const otpPinFound = await otpPinRepostory.findOneBy({
@@ -169,8 +213,18 @@ export const updateOtpPinStatus = async (req: Request, res: Response) => {
             .where({ otpPinId: otpPinStatus.otpPinId })
             .andWhere({ companyId: otpPinStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: otpPinStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `OTP Pin Setting Status For Company Id"${otpPinFound.companyId}" Changed To "${otpPinStatus.status}" By User - `,
+            companyId: otpPinStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
-            IsSuccess: `Status for ${otpPinFound.addPin} Changed Successfully`,
+            IsSuccess: `Status for Company Id${otpPinFound.addPin} Changed Successfully`,
         });
     } catch (error) {
         if (error instanceof ValidationException) {
@@ -183,10 +237,9 @@ export const updateOtpPinStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteOtpPin = async (req: Request, res: Response) => {
+    const { otpPinId, companyId, userId } = req.params
     try {
-        const otpPinId = req.params.otpPinId;
         const otpPinRepostory = appSource.getRepository(OtpPinSetting);
-        const companyId = req.params.companyId;
         const otpPinFound = await otpPinRepostory.findOneBy({
             otpPinId: otpPinId, companyId: companyId
         });
@@ -202,6 +255,13 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
             .where({ otpPinId: otpPinId, companyId: companyId })
             .execute();
 
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `OTP Pin Setting Deleted For Comapny Id"${otpPinFound.companyId}"  By User -`
+        }
+        await InsertLog(logsPayload);
 
         if (deleteResult.affected && deleteResult.affected > 0) {
             res.status(200).send({

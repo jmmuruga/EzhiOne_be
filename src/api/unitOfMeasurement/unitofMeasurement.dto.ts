@@ -25,5 +25,6 @@ export const unitOfMeasurementValidation = Joi.object({
 export interface unitOfMeasurementStatusDto {
     unitMeasurementId: string;
     status: boolean;
-    companyId: string
+    companyId: string;
+    userId: string
 }

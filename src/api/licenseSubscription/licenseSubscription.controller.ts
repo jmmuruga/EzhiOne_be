@@ -7,6 +7,6 @@ licenseRouter.get('/createLicenseId/:companyId', (req, res) => { createLicenseId
 licenseRouter.post('/addUpdateLicenseSubscription', (req, res) => { addUpdateLicenseSubscription(req, res) });
 licenseRouter.get('/getLicenseDetails/:companyId', (req, res) => { getLicenseDetails(req, res) });
 licenseRouter.post('/updateLicenseStatus', (req, res) => { updateLicenseStatus(req, res) });
-licenseRouter.delete('/deleteLicense/:companyId', (req, res) => { deleteLicense(req, res) });
+licenseRouter.delete('/deleteLicense/:companyId/:userId', (req, res) => { deleteLicense(req, res) });
 
 export default licenseRouter;

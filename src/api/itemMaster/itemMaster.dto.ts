@@ -33,5 +33,6 @@ export const itemMasterValidation = Joi.object({
 export interface itemMasterStatusDto {
   itemMasterId: string;
   status: boolean;
-  companyId: string
+  companyId: string;
+  userId: string;
 }

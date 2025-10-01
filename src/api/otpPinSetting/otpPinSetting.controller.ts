@@ -7,7 +7,7 @@ const otpPinRouter = Router();
 otpPinRouter.post('/addUpdateOtpPinSetting', (req, res) => { addUpdateOtpPinSetting(req, res) });
 otpPinRouter.get('/getOtpPinDetails/:companyId', (req, res) => { getOtpPinDetails(req, res) });
 otpPinRouter.post('/updateOtpPinStatus', (req, res) => { updateOtpPinStatus(req, res) });
-otpPinRouter.delete('/deleteOtpPin/:otpPinId/:companyId', (req, res) => { deleteOtpPin(req, res) });
+otpPinRouter.delete('/deleteOtpPin/:otpPinId/:companyId/:userId', (req, res) => { deleteOtpPin(req, res) });
 otpPinRouter.get('/sendOtp/:companyId', (req, res) => { sendOtp(req, res) });
 otpPinRouter.get('/VerifyOtpUser/:otp', (req, res) => { VerifyOtp(req, res) })
 

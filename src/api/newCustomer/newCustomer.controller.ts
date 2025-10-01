@@ -7,6 +7,6 @@ newCustomerRouter.get('/createCustomerId/:companyId', (req, res) => { createCust
 newCustomerRouter.post('/addUpdateNewCustomer', (req, res) => { addUpdateNewCustomer(req, res) });
 newCustomerRouter.get('/getNewCustomerDetails/:companyId', (req, res) => { getNewCustomerDetails(req, res) });
 newCustomerRouter.post('/updateNewCustomerStatus', (req, res) => { updateNewCustomerStatus(req, res) });
-newCustomerRouter.delete('/deleteNewCustomer/:customerId/:companyId', (req, res) => { deleteNewCustomer(req, res) });
+newCustomerRouter.delete('/deleteNewCustomer/:customerId/:companyId/:userId', (req, res) => { deleteNewCustomer(req, res) });
 
 export default newCustomerRouter;

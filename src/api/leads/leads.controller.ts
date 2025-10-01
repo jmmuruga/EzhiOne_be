@@ -7,6 +7,6 @@ leadsRouter.get('/createLeadsId/:companyId', (req, res) => { createLeadsId(req, 
 leadsRouter.post('/addUpdateLeads', (req, res) => { addUpdateLeads(req, res) });
 leadsRouter.get('/getLeadsDetails/:companyId', (req, res) => { getLeadsDetails(req, res) });
 leadsRouter.post('/updateLeadsStatus', (req, res) => { updateLeadsStatus(req, res) });
-leadsRouter.delete('/deleteLeads/:leadsId/:companyId', (req, res) => { deleteLeads(req, res) });
+leadsRouter.delete('/deleteLeads/:leadsId/:companyId/:userId', (req, res) => { deleteLeads(req, res) });
 
 export default leadsRouter;

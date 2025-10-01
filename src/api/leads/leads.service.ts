@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { leads } from "./leads.model";
 import { ValidationException } from "../../core/exception";
-import { leadsDto, leadsValidation } from "./leads.dto";
+import { leadsDto, leadsStatusDto, leadsValidation } from "./leads.dto";
+import { logsDto } from "../logs/logs.dto";
+import { getChangedProperty } from "../../shared/helper";
+import { InsertLog } from "../logs/logs.service";
+import { log } from "console";
 
 export const createLeadsId = async (req: Request, res: Response) => {
     try {
@@ -39,7 +43,7 @@ export const addUpdateLeads = async (
 ) => {
     try {
         const payload: leadsDto = req.body;
-
+        const companyId = payload.companyId
         const userId = payload.isEdited
             ? payload.muid
             : payload.cuid
@@ -64,12 +68,33 @@ export const addUpdateLeads = async (
         if (existingDetails) {
             await leadsRepositry
                 .update({ leadsId: payload.leadsId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails])
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `Leads Upadated for '${payload.employeeName}' Updated to "${updatedFields}" By User -`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "leads Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating Leads for "${payload.employeeName}" - ${error.message} By User-`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
@@ -84,6 +109,16 @@ export const addUpdateLeads = async (
             payload.muid = null;
 
             await leadsRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `Leads Added For "${payload.employeeName}" Added By User-`,
+                companyId: companyId
+            }
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "leads Added Successfully",
             });
@@ -120,9 +155,8 @@ export const getLeadsDetails = async (req: Request, res: Response) => {
 };
 
 export const deleteLeads = async (req: Request, res: Response) => {
+    const { leadsId, companyId, userId } = req.params
     try {
-        const leadsId = req.params.leadsId;
-        const companyId = req.params.companyId;
         const leadsRepositry = appSource.getTreeRepository(leads);
         const leadsFound = await leadsRepositry.findOneBy({
             leadsId: leadsId, companyId: companyId
@@ -138,6 +172,15 @@ export const deleteLeads = async (req: Request, res: Response) => {
             .where({ leadsId: leadsId, companyId: companyId })
             .execute();
 
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Leads For  "${leadsFound.employeeName}"  Deleted By User-`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `${leadsFound.employeeName} Deleted Successfully `,
         });
@@ -148,13 +191,13 @@ export const deleteLeads = async (req: Request, res: Response) => {
                 message: error.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
 export const updateLeadsStatus = async (req: Request, res: Response) => {
     try {
-        const leadsStatus: leads = req.body;
+        const leadsStatus: leadsStatusDto = req.body;
         const leadsRepositry =
             appSource.getRepository(leads);
         const leadsFound = await leadsRepositry.findOneBy({
@@ -170,6 +213,16 @@ export const updateLeadsStatus = async (req: Request, res: Response) => {
             .where({ leadsId: leadsStatus.leadsId })
             .andWhere({ companyId: leadsStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: leadsStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Leads Status For  "${leadsFound.employeeName}"  Changed To  "${leadsStatus.status}"  By User-`,
+            companyId: leadsStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${leadsFound.employeeName} Changed Successfully`,
         });

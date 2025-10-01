@@ -16,6 +16,7 @@ export interface otpPinSettingStatusDto {
     otpPinId: string
     status: boolean
     companyId: string
+    userId: string
 }
 
 export const otpPinSettingValidtion = Joi.object({

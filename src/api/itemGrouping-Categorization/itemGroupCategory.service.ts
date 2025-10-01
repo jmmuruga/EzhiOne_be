@@ -200,7 +200,7 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
             userId: ItemGroupCategorystatus.userId,
             userName: null,
             statusCode: '200',
-            message: `Brand Status For ${itemsFound.groupName} changed to ${itemsFound.status} By User`,
+            message: `Item Group/ Categorization Status For ${itemsFound.groupName} changed to ${itemsFound.status} By User`,
             companyId: ItemGroupCategorystatus.companyId
         }
         await InsertLog(logsPayload);
@@ -219,10 +219,9 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
 };
 
 export const deleteItemGroupCategory = async (req: Request, res: Response) => {
-    try {
-        const itemGroupId = req.params.itemGroupId;
-        const companyId = req.params.companyId;
+    const { itemGroupId, companyId, userId } = req.params;
 
+    try {
         const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
 
         // Check if the category exists
@@ -241,6 +240,15 @@ export const deleteItemGroupCategory = async (req: Request, res: Response) => {
             .where("itemMaster.itemGroup = :itemGroupId", { itemGroupId })
             .andWhere("itemMaster.companyId = :companyId", { companyId })
             .getCount();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Financial Year Creation for: ${itemGrpCatFound.groupName} Deleted By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload)
 
         if (usedInItemMaster > 0) {
             return res.status(400).json({

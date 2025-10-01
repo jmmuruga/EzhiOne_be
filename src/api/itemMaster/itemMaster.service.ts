@@ -1,10 +1,14 @@
 
+import { error, log } from "console";
 import { appSource } from "../../core/dataBase/db";
 import { ValidationException } from "../../core/exception";
-import { itemMasterDto, itemMasterValidation } from "./itemMaster.dto";
+import { logsDto } from "../logs/logs.dto";
+import { itemMasterDto, itemMasterStatusDto, itemMasterValidation } from "./itemMaster.dto";
 import { itemMaster } from "./itemMaster.model";
 import { Request, Response } from "express";
 import { Not } from "typeorm";
+import { getChangedProperty } from "../../shared/helper";
+import { InsertLog } from "../logs/logs.service";
 
 export const createItemMasterID = async (req: Request, res: Response) => {
     try {
@@ -36,14 +40,14 @@ export const createItemMasterID = async (req: Request, res: Response) => {
 };
 
 export const addUpdateItemMaster = async (req: Request, res: Response) => {
+    const payload: itemMasterDto = req.body;
+
+    const userId = payload.isEdited
+        ? payload.muid
+        : payload.cuid;
+    const validation = itemMasterValidation.validate(payload);
+    const companyId = payload.companyId
     try {
-        const payload: itemMasterDto = req.body;
-
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
-        const validation = itemMasterValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
         }
@@ -73,12 +77,32 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
 
             await itemMasterRepository
                 .update({ itemMasterId: payload.itemMasterId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `Brand Details Updated For "${payload.itemName}" Updated - Changes: ${updatedFields} By User - `,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "Item Details Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error while updating Item Master for ${payload.itemName} - ${error.message} bu user -`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
@@ -104,10 +128,30 @@ export const addUpdateItemMaster = async (req: Request, res: Response) => {
         payload.muid = null;
 
         await itemMasterRepository.save(payload);
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Item Master For "${payload.itemName}" Added By User -`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: "Item Details Added Successfully",
         });
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding Item Master For ${payload.itemName}- ${error.message} By User-`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -139,9 +183,8 @@ export const getItemMasterDetails = async (req: Request, res: Response) => {
 };
 
 export const deleteItemMaster = async (req: Request, res: Response) => {
+    const { itemMasterId, companyId, userId } = req.params
     try {
-        const itemMasterId = req.params.itemMasterId;
-        const companyId = req.params.companyId
         const itemMasterRepository = appSource.getTreeRepository(itemMaster);
         const itemMasterFound = await itemMasterRepository.findOneBy({
             itemMasterId: itemMasterId, companyId: companyId
@@ -155,6 +198,16 @@ export const deleteItemMaster = async (req: Request, res: Response) => {
             .from(itemMaster)
             .where({ itemMasterId: itemMasterId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Item Master "${itemMasterFound.itemName}" Deleted By User -`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `${itemMasterFound.itemName} Deleted Successfully `,
         });
@@ -169,13 +222,13 @@ export const deleteItemMaster = async (req: Request, res: Response) => {
 };
 
 export const updateItemMasterStatus = async (req: Request, res: Response) => {
+    const itemMasterStatus: itemMasterStatusDto = req.body;
+    const itemMasterRepository =
+        appSource.getRepository(itemMaster);
+    const itemMasterFound = await itemMasterRepository.findOneBy({
+        itemMasterId: itemMasterStatus.itemMasterId, companyId: itemMasterStatus.companyId
+    });
     try {
-        const itemMasterStatus: itemMaster = req.body;
-        const itemMasterRepository =
-            appSource.getRepository(itemMaster);
-        const itemMasterFound = await itemMasterRepository.findOneBy({
-            itemMasterId: itemMasterStatus.itemMasterId, companyId: itemMasterStatus.companyId
-        });
         if (!itemMasterFound) {
             throw new ValidationException("Item Not Found");
         }
@@ -186,6 +239,16 @@ export const updateItemMasterStatus = async (req: Request, res: Response) => {
             .where({ itemMasterId: itemMasterStatus.itemMasterId })
             .andWhere({ companyId: itemMasterStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: itemMasterStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Item Master For ${itemMasterFound.itemName} Changed To ${itemMasterFound.status} By User- `,
+            companyId: itemMasterStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${itemMasterFound.itemName} Changed Successfully`,
         });

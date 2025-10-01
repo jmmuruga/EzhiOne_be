@@ -661,7 +661,7 @@ export const resetUserPasswordOtp = async (req: Request, res: Response) => {
             from: "savedatain@gmail.com",
             to: "savedataakshaya03@gmail.com",
             subject: `OTP to register ${userName}`,
-            text: `Please enter the OTP: ${Generatedotp} to Register a Super Admin account
+            text: `Please enter the OTP: ${Generatedotp} to reset user password for
      User Name: ${userName} , Email: ${Email} , Mobile Number: ${Mobile}`,
         });
         const otpRepo = appSource.getRepository(otpStore);

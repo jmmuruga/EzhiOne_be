@@ -4,6 +4,10 @@ import { newCustomer } from "./newCustomer.model";
 import { ValidationException } from "../../core/exception";
 import { newCustomerDto, newCustomerStatusDto, newCustomerValidation } from "./newCustomer.dto";
 import { Not } from "typeorm";
+import { getChangedProperty } from "../../shared/helper";
+import { logsDto } from "../logs/logs.dto";
+import { InsertLog } from "../logs/logs.service";
+import { log } from "console";
 
 export const createCustomerId = async (req: Request, res: Response) => {
     try {
@@ -38,14 +42,15 @@ export const addUpdateNewCustomer = async (
     req: Request,
     res: Response
 ) => {
+    const payload: newCustomerDto = req.body;
+    const userId = payload.isEdited
+        ? payload.muid
+        : payload.cuid;
+
+    const companyId = payload.companyId;
+    const validation = newCustomerValidation.validate(payload);
+
     try {
-        const payload: newCustomerDto = req.body;
-
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
-        const validation = newCustomerValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
         }
@@ -81,18 +86,38 @@ export const addUpdateNewCustomer = async (
 
             await newCustomerRepositry
                 .update({ customerId: payload.customerId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `New Customer Updated For "${payload.customerName}"  Changed To ${updatedFields} By User-`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
                         IsSuccess: "Customer Details Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating ${payload.customerName} - ${error.message} By User-`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
                         });
                     }
-                    res.status(500).send(error);
+                    res.status(500).send(error.message);
                 });
             return;
         } else {
@@ -113,19 +138,39 @@ export const addUpdateNewCustomer = async (
 
             payload.cuid = userId;
             payload.muid = null;
-            
+
             await newCustomerRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `New Customer "${payload.customerName}" Added By User - `,
+                companyId: companyId
+            }
+            await InsertLog(logsPayload);
+
             res.status(200).send({
                 IsSuccess: "Customer Details Added Successfully",
             });
         }
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding Customer "${payload.customerName}" By User - `,
+            companyId: companyId
+        };
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
@@ -151,9 +196,8 @@ export const getNewCustomerDetails = async (req: Request, res: Response) => {
 };
 
 export const deleteNewCustomer = async (req: Request, res: Response) => {
+    const { customerId, companyId, userId } = req.params
     try {
-        const customerId = req.params.customerId;
-        const companyId = req.params.companyId;
         const newCustomerRepositry = appSource.getTreeRepository(newCustomer);
         const newCustomerFound = await newCustomerRepositry.findOneBy({
             customerId: customerId, companyId: companyId
@@ -168,6 +212,15 @@ export const deleteNewCustomer = async (req: Request, res: Response) => {
             .from(newCustomer)
             .where({ customerId: customerId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `Customer  "${newCustomerFound.customerName}"  Deleted By USer - `,
+            companyId: companyId
+        };
+        await InsertLog(logsPayload)
 
         res.status(200).send({
             IsSuccess: `${newCustomerFound.customerName} Deleted Successfully `,
@@ -201,6 +254,16 @@ export const updateNewCustomerStatus = async (req: Request, res: Response) => {
             .where({ customerId: newCustomerStatus.customerId })
             .andWhere({ companyId: newCustomerStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: newCustomerStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Customer Status For "${newCustomerFound.customerName}" Changed To "${newCustomerStatus.status}" By User -`,
+            companyId: newCustomerStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${newCustomerFound.customerName} Changed Successfully`,
         });

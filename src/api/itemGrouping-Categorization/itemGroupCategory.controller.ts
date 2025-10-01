@@ -7,6 +7,6 @@ itemGroupCategoryRouter.get('/getGroupCategoryId/:companyId', (req, res) => { ge
 itemGroupCategoryRouter.post('/addUpdateItemGroupCategory', (req, res) => { addUpdateItemGroupCategory(req, res) })
 itemGroupCategoryRouter.get('/getItemGroupCategoryDetails/:companyId', (req, res) => { getItemGroupCategoryDetails(req, res) })
 itemGroupCategoryRouter.post('/updateItemGroupCategoryStatus', (req, res) => { updateItemGroupCategoryStatus(req, res) })
-itemGroupCategoryRouter.delete('/deleteItemGroupCategory/:itemGroupId/:companyId', (req, res) => { deleteItemGroupCategory(req, res) })
+itemGroupCategoryRouter.delete('/deleteItemGroupCategory/:itemGroupId/:companyId/:userId', (req, res) => { deleteItemGroupCategory(req, res) })
 
 export default itemGroupCategoryRouter;

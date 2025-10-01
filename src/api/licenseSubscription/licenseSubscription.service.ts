@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { licenseSubscription } from "./licenseSubscription.model";
 import { ValidationException } from "../../core/exception";
-import { licenseSubscriptionDto, licenseSubscriptionValidation } from "./licenseSubscription.dto";
-
+import { licenseSubscriptionDto, licenseSubscriptionStatusDto, licenseSubscriptionValidation } from "./licenseSubscription.dto";
+import { getChangedProperty } from "../../shared/helper";
+import { logsDto } from "../logs/logs.dto";
+import { InsertLog } from "../logs/logs.service";
 
 export const createLicenseId = async (req: Request, res: Response) => {
     try {
@@ -38,14 +40,17 @@ export const addUpdateLicenseSubscription = async (
     req: Request,
     res: Response
 ) => {
+    const payload: licenseSubscriptionDto = req.body;
+
+    const userId = payload.isEdited
+        ? payload.muid
+        : payload.cuid;
+
+    const companyId = payload.companyId
+
+    const validation = licenseSubscriptionValidation.validate(payload);
     try {
-        const payload: licenseSubscriptionDto = req.body;
 
-        const userId = payload.isEdited
-            ? payload.muid
-            : payload.cuid;
-
-        const validation = licenseSubscriptionValidation.validate(payload);
         if (validation.error) {
             throw new ValidationException(validation.error.message);
         }
@@ -65,12 +70,31 @@ export const addUpdateLicenseSubscription = async (
         if (existingDetails) {
             await licenseRepositry
                 .update({ licenseId: payload.licenseId, companyId: payload.companyId }, payload)
-                .then(() => {
+                .then(async () => {
+                    const updatedFields: string = await getChangedProperty([payload], [existingDetails]);
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '200',
+                        message: `License Updated For ${payload.companyName} Updated Changes ${updatedFields} By User -`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     res.status(200).send({
-                        IsSuccess: "leads Updated Successfully",
+                        IsSuccess: "License Updated Successfully",
                     });
                 })
-                .catch((error) => {
+                .catch(async (error) => {
+                    const logsPayload: logsDto = {
+                        userId: userId,
+                        userName: null,
+                        statusCode: '400',
+                        message: `Error While Updating License for  "${payload.companyName}" - ${error.message}  By User -`,
+                        companyId: companyId
+                    }
+                    await InsertLog(logsPayload);
+
                     if (error instanceof ValidationException) {
                         return res.status(400).send({
                             message: error?.message,
@@ -85,11 +109,28 @@ export const addUpdateLicenseSubscription = async (
             payload.muid = null;
 
             await licenseRepositry.save(payload);
+
+            const logsPayload: logsDto = {
+                userId: userId,
+                userName: null,
+                statusCode: '200',
+                message: `License For  "${payload.companyName}" Added By User -`,
+                companyId: companyId
+            }
+            await InsertLog(logsPayload);
+
             res.status(200).send({
-                IsSuccess: "leads Added Successfully",
+                IsSuccess: "License Added Successfully",
             });
         }
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Adding License For  "${payload.companyName}"  By User-`,
+            companyId: companyId
+        }
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -122,7 +163,7 @@ export const getLicenseDetails = async (req: Request, res: Response) => {
 
 export const updateLicenseStatus = async (req: Request, res: Response) => {
     try {
-        const licenseStatus: licenseSubscription = req.body;
+        const licenseStatus: licenseSubscriptionStatusDto = req.body;
         const licenseRepositry =
             appSource.getRepository(licenseSubscription);
         const licenseFound = await licenseRepositry.findOneBy({
@@ -138,6 +179,16 @@ export const updateLicenseStatus = async (req: Request, res: Response) => {
             .where({ licenseId: licenseStatus.licenseId })
             .andWhere({ companyId: licenseStatus.companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: licenseStatus.userId,
+            userName: null,
+            statusCode: '200',
+            message: `License Status For  "${licenseFound.companyName}"  Changed To  "${licenseStatus.status}"  By User-`,
+            companyId: licenseStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         res.status(200).send({
             IsSuccess: `Status for ${licenseFound.companyName} Changed Successfully`,
         });
@@ -152,9 +203,8 @@ export const updateLicenseStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteLicense = async (req: Request, res: Response) => {
+    const { licenseId, companyId, userId } = req.params
     try {
-        const licenseId = req.params.licenseId;
-        const companyId = req.params.companyId;
         const licenseRepositry = appSource.getTreeRepository(licenseSubscription);
         const licenseFound = await licenseRepositry.findOneBy({
             licenseId: licenseId, companyId: companyId
@@ -169,6 +219,15 @@ export const deleteLicense = async (req: Request, res: Response) => {
             .from(licenseSubscription)
             .where({ licenseId: licenseId, companyId: companyId })
             .execute();
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '200',
+            message: `License For  "${licenseFound.companyName}"  Deleted By User -`,
+            companyId: companyId
+        }
+        await InsertLog(logsPayload)
 
         res.status(200).send({
             IsSuccess: `${licenseFound.companyName} Deleted Successfully `,

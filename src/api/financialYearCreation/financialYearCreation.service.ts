@@ -286,7 +286,7 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
             userId: userId,
             userName: null,
             statusCode: '200',
-            message: `Financial Year Creation : ${financialYearFound.companyName} Deleted By User -  `,
+            message: `Financial Year Creation for : ${financialYearFound.companyName} Deleted By User -  `,
             companyId: companyId,
         }
         await InsertLog(logsPayload)

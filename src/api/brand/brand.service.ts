@@ -140,7 +140,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
                         userId: userId,
                         userName: null,
                         statusCode: '400',
-                        message: `Error While Updating Brand Details ${payload.brandName} - ${error.message} By User - `,
+                        message: `Error While Updating Brand Details For "${payload.brandName}" - ${error.message} By User - `,
                         companyId: companyId
                     };
                     await InsertLog(logsPayload);
@@ -163,7 +163,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
                 userId: userId,
                 userName: null,
                 statusCode: '200',
-                message: `Brand Details "${payload.brandName}" Added By User - `,
+                message: `Brand "${payload.brandName}" Added By User - `,
                 companyId: companyId
             };
             await InsertLog(logsPayload);
@@ -177,7 +177,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
             userId: userId,
             userName: null,
             statusCode: '400',
-            message: `Error While Adding/Updating Brand Details ${payload.brandName} - ${error.message} By User - `,
+            message: `Error While Adding Brand ${payload.brandName} - ${error.message} By User - `,
             companyId: companyId
         };
         await InsertLog(logsPayload);
@@ -236,7 +236,7 @@ export const deleteBrand = async (req: Request, res: Response) => {
             userId: userId,
             userName: null,
             statusCode: '200',
-            message: `Brand Details : ${brandFound.brandName} Deleted By User -  `,
+            message: `Brand Details For "${brandFound.brandName}" Deleted By User -  `,
             companyId: companyId,
         }
         await InsertLog(logsPayload);

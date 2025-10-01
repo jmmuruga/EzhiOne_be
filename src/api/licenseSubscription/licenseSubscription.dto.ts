@@ -17,6 +17,7 @@ export interface licenseSubscriptionStatusDto {
     licenseId: string
     status: boolean
     companyId: string
+    userId: string
 }
 
 export const licenseSubscriptionValidation = Joi.object({
