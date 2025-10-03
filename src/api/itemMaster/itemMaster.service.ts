@@ -1,5 +1,4 @@
 
-import { error, log } from "console";
 import { appSource } from "../../core/dataBase/db";
 import { ValidationException } from "../../core/exception";
 import { logsDto } from "../logs/logs.dto";
@@ -184,11 +183,12 @@ export const getItemMasterDetails = async (req: Request, res: Response) => {
 
 export const deleteItemMaster = async (req: Request, res: Response) => {
     const { itemMasterId, companyId, userId } = req.params
+    const itemMasterRepository = appSource.getTreeRepository(itemMaster);
+    const itemMasterFound = await itemMasterRepository.findOneBy({
+        itemMasterId: itemMasterId, companyId: companyId
+    });
+
     try {
-        const itemMasterRepository = appSource.getTreeRepository(itemMaster);
-        const itemMasterFound = await itemMasterRepository.findOneBy({
-            itemMasterId: itemMasterId, companyId: companyId
-        });
         if (!itemMasterFound) {
             throw new ValidationException("Item Not Found ");
         }
@@ -212,6 +212,14 @@ export const deleteItemMaster = async (req: Request, res: Response) => {
             IsSuccess: `${itemMasterFound.itemName} Deleted Successfully `,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Item Master  "${itemMasterFound.itemName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -253,6 +261,16 @@ export const updateItemMasterStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${itemMasterFound.itemName} Changed Successfully`,
         });
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: itemMasterStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Item Master Status For "${itemMasterFound.itemName}" changed to "${itemMasterStatus.status}" By User`,
+            companyId: itemMasterStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,

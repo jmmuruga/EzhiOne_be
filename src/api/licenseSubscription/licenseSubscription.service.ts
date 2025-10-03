@@ -162,13 +162,15 @@ export const getLicenseDetails = async (req: Request, res: Response) => {
 };
 
 export const updateLicenseStatus = async (req: Request, res: Response) => {
+    const licenseStatus: licenseSubscriptionStatusDto = req.body;
+    const licenseRepositry =
+        appSource.getRepository(licenseSubscription);
+    const licenseFound = await licenseRepositry.findOneBy({
+        licenseId: licenseStatus.licenseId, companyId: licenseStatus.companyId
+    });
+
     try {
-        const licenseStatus: licenseSubscriptionStatusDto = req.body;
-        const licenseRepositry =
-            appSource.getRepository(licenseSubscription);
-        const licenseFound = await licenseRepositry.findOneBy({
-            licenseId: licenseStatus.licenseId, companyId: licenseStatus.companyId
-        });
+
         if (!licenseFound) {
             throw new ValidationException("Leads Not Found");
         }
@@ -193,6 +195,16 @@ export const updateLicenseStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${licenseFound.companyName} Changed Successfully`,
         });
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: licenseStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating License Subscription Status For "${licenseFound.companyName}" changed to "${licenseStatus.status}" By User`,
+            companyId: licenseStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -204,11 +216,12 @@ export const updateLicenseStatus = async (req: Request, res: Response) => {
 
 export const deleteLicense = async (req: Request, res: Response) => {
     const { licenseId, companyId, userId } = req.params
+    const licenseRepositry = appSource.getTreeRepository(licenseSubscription);
+    const licenseFound = await licenseRepositry.findOneBy({
+        licenseId: licenseId, companyId: companyId
+    });
+
     try {
-        const licenseRepositry = appSource.getTreeRepository(licenseSubscription);
-        const licenseFound = await licenseRepositry.findOneBy({
-            licenseId: licenseId, companyId: companyId
-        });
 
         if (!licenseFound) {
             throw new ValidationException("Customer Not Found ");
@@ -234,6 +247,15 @@ export const deleteLicense = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting License Subscription  "${licenseFound.companyName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,

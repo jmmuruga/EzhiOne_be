@@ -196,13 +196,15 @@ export const getOtpPinDetails = async (req: Request, res: Response) => {
 };
 
 export const updateOtpPinStatus = async (req: Request, res: Response) => {
+    const otpPinStatus: otpPinSettingStatusDto = req.body;
+    const otpPinRepostory =
+        appSource.getRepository(OtpPinSetting);
+    const otpPinFound = await otpPinRepostory.findOneBy({
+        otpPinId: otpPinStatus.otpPinId, companyId: otpPinStatus.companyId
+    });
+
     try {
-        const otpPinStatus: otpPinSettingStatusDto = req.body;
-        const otpPinRepostory =
-            appSource.getRepository(OtpPinSetting);
-        const otpPinFound = await otpPinRepostory.findOneBy({
-            otpPinId: otpPinStatus.otpPinId, companyId: otpPinStatus.companyId
-        });
+
         if (!otpPinFound) {
             throw new ValidationException("OTP pin Not Found");
         }
@@ -227,6 +229,14 @@ export const updateOtpPinStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for Company Id${otpPinFound.addPin} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: otpPinStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating OTP Pin Setting Status For "${otpPinFound.addPin}" changed to "${otpPinStatus.status}" By User`,
+            companyId: otpPinStatus.companyId
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -238,11 +248,13 @@ export const updateOtpPinStatus = async (req: Request, res: Response) => {
 
 export const deleteOtpPin = async (req: Request, res: Response) => {
     const { otpPinId, companyId, userId } = req.params
+    const otpPinRepostory = appSource.getRepository(OtpPinSetting);
+    const otpPinFound = await otpPinRepostory.findOneBy({
+        otpPinId: otpPinId, companyId: companyId
+    });
+
     try {
-        const otpPinRepostory = appSource.getRepository(OtpPinSetting);
-        const otpPinFound = await otpPinRepostory.findOneBy({
-            otpPinId: otpPinId, companyId: companyId
-        });
+
         if (!otpPinFound) {
             throw new ValidationException("OTP Not Found");
         }
@@ -272,6 +284,14 @@ export const deleteOtpPin = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting OTP Pin Setting For  "${otpPinFound.companyId}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }

@@ -296,12 +296,12 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteUserDetails = async (req: Request, res: Response) => {
+    const { userId, deletedUserId, companyId } = req.params;
+    const userDetailsRepositry = appSource.getRepository(UserDetails);
+    const userregisterFound = await userDetailsRepositry.findOneBy({ userId });
+
     try {
-        const { userId, deletedUserId, companyId } = req.params;
-        // const companyId, deletedUserId = req.params.companyId;
-        // const userId = req.params.userId;
-        const userDetailsRepositry = appSource.getRepository(UserDetails);
-        const userregisterFound = await userDetailsRepositry.findOneBy({ userId });
+
         if (!userregisterFound) {
             throw new ValidationException("User Not Found");
         }
@@ -331,6 +331,15 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting User  "${userregisterFound.userName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }

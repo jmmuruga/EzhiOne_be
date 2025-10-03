@@ -36,126 +36,6 @@ export const getCompanyId = async (req: Request, res: Response) => {
     }
 };
 
-// export const addUpdateCompanyRegistration = async (
-//     req: Request,
-//     res: Response
-// ) => {
-//     try {
-//         const payload: companyRegistrationDto = req.body;
-
-//         const userId = payload.isEdited
-//             ? payload.muid
-//             : payload.cuid;
-
-//         const validation = companyRegistrationValidation.validate(payload);
-//         if (validation.error) {
-//             throw new ValidationException(validation.error.message);
-//         }
-//         const companyRegistrationRepositry =
-//             appSource.getRepository(companyRegistration);
-//         const existingDetails = await companyRegistrationRepositry.findOneBy({
-//             companyId: payload.companyId,
-//         });
-//         if (existingDetails) {
-//             const companyNameAndBranchValidation =
-//                 await companyRegistrationRepositry.findOneBy({
-//                     companyName: payload.companyName,
-//                     branch: payload.branch,
-//                     companyId: Not(payload.companyId),
-//                 });
-//             if (companyNameAndBranchValidation) {
-//                 throw new ValidationException(
-//                     "Branch already exists for this Company."
-//                 );
-//             }
-//             const emailValidation = await companyRegistrationRepositry.findOneBy({
-//                 Email: payload.Email,
-//                 companyId: Not(payload.companyId),
-//             });
-//             if (emailValidation) {
-//                 throw new ValidationException("Email Address Already Exist");
-//             }
-
-//             if (payload.branchMobile) {
-//                 const mobileValidation = await companyRegistrationRepositry.findOneBy({
-//                     branchMobile: payload.branchMobile,
-//                     companyId: Not(payload.companyId),
-//                 });
-//                 if (mobileValidation) {
-//                     throw new ValidationException("Mobile Number Already Exist");
-//                 }
-//             }
-//             if (existingDetails) {
-
-//                 payload.cuid = existingDetails.cuid;
-//                 payload.muid = payload.muid || userId;
-
-//                 await companyRegistrationRepositry.update(
-//                     { companyId: payload.companyId },
-//                     payload
-//                 );
-//             }
-
-//             await companyRegistrationRepositry
-//                 .update({ companyId: payload.companyId }, payload)
-//                 .then(() => {
-//                     res.status(200).send({
-//                         IsSuccess: "Company Details Updated Successfully",
-//                     });
-//                 })
-//                 .catch((error) => {
-//                     if (error instanceof ValidationException) {
-//                         return res.status(400).send({
-//                             message: error?.message,
-//                         });
-//                     }
-//                     res.status(500).send(error.message);
-//                 });
-//             return;
-//         } else {
-//             const companyNameAndBranchValidation =
-//                 await companyRegistrationRepositry.findOneBy({
-//                     companyName: payload.companyName,
-//                     branch: payload.branch,
-//                 });
-//             if (companyNameAndBranchValidation) {
-//                 throw new ValidationException(
-//                     "Branch already exists for this company."
-//                 );
-//             }
-//             const emailValidation = await companyRegistrationRepositry.findOneBy({
-//                 Email: payload.Email,
-//             });
-//             if (emailValidation) {
-//                 throw new ValidationException("Email Address Already Exist");
-//             }
-//             if (payload.branchMobile) {
-//                 const mobileValidation = await companyRegistrationRepositry.findOneBy({
-//                     branchMobile: payload.branchMobile,
-//                 });
-//                 if (mobileValidation) {
-//                     throw new ValidationException("Mobile Number Already Exist");
-//                 }
-//             }
-
-//             payload.cuid = userId;
-//             payload.muid = null;
-
-//             await companyRegistrationRepositry.save(payload);
-//             res.status(200).send({
-//                 IsSuccess: "Company Details Added successfully",
-//             });
-//         }
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error?.message,
-//             });
-//         }
-//         res.status(500).send(error.message);
-//     }
-// };
-
 export const addUpdateCompanyRegistration = async (
     req: Request,
     res: Response
@@ -231,7 +111,7 @@ export const addUpdateCompanyRegistration = async (
                         userId: userId,
                         userName: null,
                         statusCode: '400',
-                        message: `Error While Updating Company Details ${payload.companyName} - ${error.message} By User - `,
+                        message: `Error While Updating Company Details For  "${payload.companyName}" - ${error.message} By User - `,
                         companyId: companyId
                     };
                     await InsertLog(logsPayload);
@@ -328,13 +208,13 @@ export const getCompanyDetails = async (req: Request, res: Response) => {
 };
 
 export const updateCompanyStatus = async (req: Request, res: Response) => {
+    const companystatus: companyRegistrationStatusDto = req.body;
+    const companyRegistrationRepositry =
+        appSource.getRepository(companyRegistration);
+    const companyFound = await companyRegistrationRepositry.findOneBy({
+        companyId: companystatus.companyId,
+    });
     try {
-        const companystatus: companyRegistrationStatusDto = req.body;
-        const companyRegistrationRepositry =
-            appSource.getRepository(companyRegistration);
-        const companyFound = await companyRegistrationRepositry.findOneBy({
-            companyId: companystatus.companyId,
-        });
         if (!companyFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -358,6 +238,14 @@ export const updateCompanyStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${companyFound.companyName} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: companystatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Company Status For "${companyFound.companyName}" changed to "${companystatus.status}" By User`,
+            companyId: companystatus.companyId
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -369,15 +257,13 @@ export const updateCompanyStatus = async (req: Request, res: Response) => {
 
 export const deleteCompany = async (req: Request, res: Response) => {
     const { userId, companyId } = req.params;
+    const companyRepository = appSource.getRepository(companyRegistration);
+    const companyFound = await companyRepository.findOneBy({ companyId });
+    if (!companyFound) {
+        throw new ValidationException("Company Not Found");
+    }
+
     try {
-        const companyRepository = appSource.getRepository(companyRegistration);
-
-        // Check if company exists
-        const companyFound = await companyRepository.findOneBy({ companyId });
-        if (!companyFound) {
-            throw new ValidationException("Company Not Found");
-        }
-
         // Delete using QueryBuilder (explicit cast to string)
         const deleteResult = await companyRepository
             .createQueryBuilder()
@@ -404,6 +290,15 @@ export const deleteCompany = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Company  "${companyFound.companyName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }

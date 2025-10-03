@@ -177,7 +177,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
             userId: userId,
             userName: null,
             statusCode: '400',
-            message: `Error While Adding Brand ${payload.brandName} - ${error.message} By User - `,
+            message: `Error While Adding Brand "${payload.brandName}" - ${error.message} By User - `,
             companyId: companyId
         };
         await InsertLog(logsPayload);
@@ -215,13 +215,14 @@ export const getBrandDetails = async (req: Request, res: Response) => {
 
 export const deleteBrand = async (req: Request, res: Response) => {
     const { userId, brandId, companyId } = req.params;
+    const brandRepositry = appSource.getTreeRepository(Brand);
+    const brandFound = await brandRepositry.findOneBy({
+        brandId: brandId, companyId: companyId
+    });
     try {
         // const brandId = req.params.brandId;
         // const companyId = req.params.companyId;
-        const brandRepositry = appSource.getTreeRepository(Brand);
-        const brandFound = await brandRepositry.findOneBy({
-            brandId: brandId, companyId: companyId
-        });
+
         if (!brandFound) {
             throw new ValidationException("Brand Not Found ");
         }
@@ -245,6 +246,15 @@ export const deleteBrand = async (req: Request, res: Response) => {
             IsSuccess: `${brandFound.brandName} Deleted Successfully `,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Brand  "${brandFound.brandName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -255,13 +265,14 @@ export const deleteBrand = async (req: Request, res: Response) => {
 };
 
 export const updateBrandStatus = async (req: Request, res: Response) => {
+    const brandStatus: brandStatusDto = req.body;
+    const brandRepositry =
+        appSource.getRepository(Brand);
+    const brandFound = await brandRepositry.findOneBy({
+        brandId: brandStatus.brandId, companyId: brandStatus.companyId
+    });
     try {
-        const brandStatus: brandStatusDto = req.body;
-        const brandRepositry =
-            appSource.getRepository(Brand);
-        const brandFound = await brandRepositry.findOneBy({
-            brandId: brandStatus.brandId, companyId: brandStatus.companyId
-        });
+
         if (!brandFound) {
             throw new ValidationException("Brand Not Found");
         }
@@ -277,7 +288,7 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
             userId: brandStatus.userId,
             userName: null,
             statusCode: '200',
-            message: `Brand Status For ${brandFound.brandName} changed to ${brandStatus.status} By User`,
+            message: `Brand Status For "${brandFound.brandName}" changed to "${brandStatus.status}" By User`,
             companyId: brandStatus.companyId
         }
         await InsertLog(logsPayload);
@@ -285,6 +296,15 @@ export const updateBrandStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${brandFound.brandName} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: brandStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Brand Status For "${brandFound.brandName}" changed to "${brandStatus.status}" By User`,
+            companyId: brandStatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,

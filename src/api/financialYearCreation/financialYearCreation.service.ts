@@ -253,6 +253,16 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
             IsSuccess: `Status for ${financialYearFound.companyName} Changed Successfully`,
         });
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: financialYearstatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Financial Year Creation Status For "${financialYearFound.companyName}" changed to "${financialYearstatus.status}" By User`,
+            companyId: financialYearstatus.companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -264,12 +274,10 @@ export const updateFinancialYearStatus = async (req: Request, res: Response) => 
 
 export const deleteFinancialYear = async (req: Request, res: Response) => {
     const { financialYearId, userId, companyId } = req.params;
+    const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
+    const financialYearFound = await financialYearRepositry.findOneBy({ financialYearId });
 
     try {
-        const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
-
-        // Check if company exists
-        const financialYearFound = await financialYearRepositry.findOneBy({ financialYearId });
         if (!financialYearFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -300,6 +308,15 @@ export const deleteFinancialYear = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Financial Year Creation For  "${financialYearFound.companyName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+        
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }

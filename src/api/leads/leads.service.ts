@@ -6,7 +6,6 @@ import { leadsDto, leadsStatusDto, leadsValidation } from "./leads.dto";
 import { logsDto } from "../logs/logs.dto";
 import { getChangedProperty } from "../../shared/helper";
 import { InsertLog } from "../logs/logs.service";
-import { log } from "console";
 
 export const createLeadsId = async (req: Request, res: Response) => {
     try {
@@ -156,12 +155,12 @@ export const getLeadsDetails = async (req: Request, res: Response) => {
 
 export const deleteLeads = async (req: Request, res: Response) => {
     const { leadsId, companyId, userId } = req.params
-    try {
-        const leadsRepositry = appSource.getTreeRepository(leads);
-        const leadsFound = await leadsRepositry.findOneBy({
-            leadsId: leadsId, companyId: companyId
-        });
+    const leadsRepositry = appSource.getTreeRepository(leads);
+    const leadsFound = await leadsRepositry.findOneBy({
+        leadsId: leadsId, companyId: companyId
+    });
 
+    try {
         if (!leadsFound) {
             throw new ValidationException("Customer Not Found ");
         }
@@ -186,6 +185,14 @@ export const deleteLeads = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Leads  "${leadsFound.employeeName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
@@ -196,13 +203,15 @@ export const deleteLeads = async (req: Request, res: Response) => {
 };
 
 export const updateLeadsStatus = async (req: Request, res: Response) => {
+    const leadsStatus: leadsStatusDto = req.body;
+    const leadsRepositry =
+        appSource.getRepository(leads);
+    const leadsFound = await leadsRepositry.findOneBy({
+        leadsId: leadsStatus.leadsId, companyId: leadsStatus.companyId
+    });
+
     try {
-        const leadsStatus: leadsStatusDto = req.body;
-        const leadsRepositry =
-            appSource.getRepository(leads);
-        const leadsFound = await leadsRepositry.findOneBy({
-            leadsId: leadsStatus.leadsId, companyId: leadsStatus.companyId
-        });
+
         if (!leadsFound) {
             throw new ValidationException("Leads Not Found");
         }
@@ -227,6 +236,14 @@ export const updateLeadsStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${leadsFound.employeeName} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: leadsStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Leads Status For "${leadsFound.employeeName}" changed to "${leadsStatus.status}" By User`,
+            companyId: leadsStatus.companyId
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,

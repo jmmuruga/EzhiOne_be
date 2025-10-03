@@ -177,14 +177,16 @@ export const getUnitMeasurementDetails = async (req: Request, res: Response) => 
 };
 
 export const updateUnitMeasurementStatus = async (req: Request, res: Response) => {
+    const UnitMeasurementstatus: unitOfMeasurementStatusDto = req.body;
+    const unitMeasurementRepository =
+        appSource.getRepository(unitOfMeasurement);
+    const UnitMeasurementFound = await unitMeasurementRepository.findOneBy({
+        unitMeasurementId: UnitMeasurementstatus.unitMeasurementId,
+        companyId: UnitMeasurementstatus.companyId
+    });
+
     try {
-        const UnitMeasurementstatus: unitOfMeasurementStatusDto = req.body;
-        const unitMeasurementRepository =
-            appSource.getRepository(unitOfMeasurement);
-        const UnitMeasurementFound = await unitMeasurementRepository.findOneBy({
-            unitMeasurementId: UnitMeasurementstatus.unitMeasurementId,
-            companyId: UnitMeasurementstatus.companyId
-        });
+
         if (!UnitMeasurementFound) {
             throw new ValidationException("UnitMeasurement Not Found");
         }
@@ -200,7 +202,7 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
             userId: UnitMeasurementstatus.userId,
             userName: null,
             statusCode: '200',
-            message: `Unit Of Measurement Status Fro "${UnitMeasurementFound.unitName}"  Changed to ${UnitMeasurementstatus.status} By User -`,
+            message: `Unit Of Measurement Status Fro "${UnitMeasurementFound.unitName}"  Changed to "${UnitMeasurementstatus.status}" By User -`,
             companyId: UnitMeasurementstatus.companyId
         }
         await InsertLog(logsPayload);
@@ -209,6 +211,15 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
             IsSuccess: `Status for ${UnitMeasurementFound.unitName} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: UnitMeasurementstatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Unit Of Measurement Status For "${UnitMeasurementFound.unitName}" changed to "${UnitMeasurementstatus.status}" By User`,
+            companyId: UnitMeasurementstatus.companyId
+        }
+        await InsertLog(logsPayload);
+        
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -220,13 +231,13 @@ export const updateUnitMeasurementStatus = async (req: Request, res: Response) =
 
 export const deleteUnitMeasurement = async (req: Request, res: Response) => {
     const { unitMeasurementId, companyId, userId } = req.params
+    const unitMeasurementRepository = appSource.getRepository(unitOfMeasurement);
+    const itemMasterRepo = appSource.getRepository(itemMaster);
+    const unitMeasurementFound = await unitMeasurementRepository.findOneBy({
+        unitMeasurementId: unitMeasurementId, companyId: companyId
+    });
+
     try {
-        const unitMeasurementRepository = appSource.getRepository(unitOfMeasurement);
-        const itemMasterRepo = appSource.getRepository(itemMaster);
-        // Check if unit exists
-        const unitMeasurementFound = await unitMeasurementRepository.findOneBy({
-            unitMeasurementId: unitMeasurementId, companyId: companyId
-        });
         if (!unitMeasurementFound) {
             throw new ValidationException("Company Not Found");
         }
@@ -255,7 +266,7 @@ export const deleteUnitMeasurement = async (req: Request, res: Response) => {
             userId: userId,
             userName: null,
             statusCode: '400',
-            message: `Unit Of Measurement For" ${unitMeasurementFound.unitName}" Deleted By User -`,
+            message: `Unit Of Measurement For  "${unitMeasurementFound.unitName}"  Deleted By User -`,
             companyId: companyId
         }
         await InsertLog(logsPayload)
@@ -269,6 +280,15 @@ export const deleteUnitMeasurement = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Unit Of Measurement  "${unitMeasurementFound.unitName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({ message: error.message });
         }

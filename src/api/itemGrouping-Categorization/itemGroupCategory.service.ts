@@ -177,14 +177,15 @@ export const getItemGroupCategoryDetails = async (req: Request, res: Response) =
 };
 
 export const updateItemGroupCategoryStatus = async (req: Request, res: Response) => {
+    const ItemGroupCategorystatus: ItemGroupCategoryStatusDto = req.body;
+    const itemGroupCategoryRepositry =
+        appSource.getRepository(ItemGroupCategory);
+    const itemsFound = await itemGroupCategoryRepositry.findOneBy({
+        itemGroupId: ItemGroupCategorystatus.itemGroupId,
+        companyId: ItemGroupCategorystatus.companyId
+    });
     try {
-        const ItemGroupCategorystatus: ItemGroupCategoryStatusDto = req.body;
-        const itemGroupCategoryRepositry =
-            appSource.getRepository(ItemGroupCategory);
-        const itemsFound = await itemGroupCategoryRepositry.findOneBy({
-            itemGroupId: ItemGroupCategorystatus.itemGroupId,
-            companyId: ItemGroupCategorystatus.companyId
-        });
+
         if (!itemsFound) {
             throw new ValidationException("UnitMeasurement Not Found");
         }
@@ -209,6 +210,15 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
             IsSuccess: `Status for ${itemsFound.groupName} Changed Successfully`,
         });
     } catch (error) {
+
+        const logsPayload: logsDto = {
+            userId: ItemGroupCategorystatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Item Group / Categorization Status For "${itemsFound.groupName}" changed to "${ItemGroupCategorystatus.status}" By User`,
+            companyId: ItemGroupCategorystatus.companyId
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -220,16 +230,13 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
 
 export const deleteItemGroupCategory = async (req: Request, res: Response) => {
     const { itemGroupId, companyId, userId } = req.params;
+    const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
+    const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({
+        itemGroupId: itemGroupId,
+        companyId: companyId
+    });
 
     try {
-        const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
-
-        // Check if the category exists
-        const itemGrpCatFound = await itemGroupCategoryRepositry.findOneBy({
-            itemGroupId: itemGroupId,
-            companyId: companyId
-        });
-
         if (!itemGrpCatFound) {
             return res.status(404).json({ message: "Item Group Not Found" });
         }
@@ -266,12 +273,23 @@ export const deleteItemGroupCategory = async (req: Request, res: Response) => {
             return res.status(200).json({
                 IsSuccess: `${itemGrpCatFound.groupName} Deleted Successfully`
             });
-        } else {
-            return res.status(500).json({ message: "Delete failed: No rows affected" });
         }
-
     } catch (error) {
-        console.error('Delete Item Group Error:', error);
-        res.status(500).json({ message: error?.message || 'Internal Server Error' });
+
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Item Group / Categorization For  "${itemGrpCatFound.groupName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
+
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                message: error?.message,
+            });
+        }
+        res.status(500).send(error);
     }
 };

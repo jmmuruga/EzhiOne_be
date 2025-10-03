@@ -337,6 +337,15 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
             IsSuccess: `Status for ${emlpoyeeFound.employeeName} Changed Successfully`,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: employeeStatus.userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Updating Employee Status For "${emlpoyeeFound.employeeName}" changed to "${employeeStatus.status}" By User`,
+            companyId: employeeStatus.companyId
+        }
+        await InsertLog(logsPayload);
+        
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
@@ -348,12 +357,12 @@ export const updateEmployeeStatus = async (req: Request, res: Response) => {
 
 export const deleteEmployee = async (req: Request, res: Response) => {
     const { employeeId, userId, companyId } = req.params;
-
+    const employeeRegistrationRepositry = appSource.getTreeRepository(employeeRegistration);
+    const employeeFound = await employeeRegistrationRepositry.findOneBy({
+        employeeId: employeeId,
+    });
     try {
-        const employeeRegistrationRepositry = appSource.getTreeRepository(employeeRegistration);
-        const employeeFound = await employeeRegistrationRepositry.findOneBy({
-            employeeId: employeeId,
-        });
+
         if (!employeeFound) {
             throw new ValidationException("Employee Not Found ");
         }
@@ -378,6 +387,14 @@ export const deleteEmployee = async (req: Request, res: Response) => {
             IsSuccess: `${employeeFound.employeeName} Deleted Successfully `,
         });
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: userId,
+            userName: null,
+            statusCode: '400',
+            message: `Error While Deleting Employee  "${employeeFound.employeeName}"  By User -  `,
+            companyId: companyId,
+        }
+        await InsertLog(logsPayload);
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
