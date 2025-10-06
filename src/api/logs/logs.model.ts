@@ -14,6 +14,6 @@ export class Logs {
     message: string;
     @Column({ nullable: true })
     companyId: string;
-    @CreateDateColumn({ name: "created_at" })
+    @CreateDateColumn({ name: "createdAt" })
     createdAt: Date;
 }

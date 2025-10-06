@@ -4,4 +4,5 @@ export interface logsDto {
     statusCode: string;
     message: string;
     companyId?: string;
+    createdAt?: Date;
 }

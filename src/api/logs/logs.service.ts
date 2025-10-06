@@ -29,26 +29,26 @@ export const getLogsReport = async (req: Request, res: Response) => {
     ud.userName,
     l.statusCode,
     l.message,
-    l.created_at
+    l.createdAt
 FROM [BILLING_SOFTWARE].[dbo].[logs] l
 INNER JOIN [BILLING_SOFTWARE].[dbo].[user_details] ud
     ON l.userId = ud.userId
 WHERE l.companyId = '${companyId}'              
-  AND l.userId = '${userId}
-  AND l.created_at >= '${fromDate}'
-  AND l.created_at <  '${toDate}'  
+  AND l.userId = '${userId}'
+  AND l.createdAt >= '${fromDate}'
+  AND l.createdAt <  '${toDate}'  
 ORDER BY l.logId DESC`
             );
 
         } else {
             Details = await logsRepository.query(
-                `Select l.logId,l.userId,ud.userName,l.statusCode,l.message,l.created_at
+                `Select l.logId,l.userId,ud.userName,l.statusCode,l.message,l.createdAt
         from [BILLING_SOFTWARE].[dbo].[logs] l
         inner join [BILLING_SOFTWARE].[dbo].user_details ud
         on l.userId = ud.userId
         where l.companyId = '${companyId}'
-        AND l.created_at >= '${toDate}' 
-  AND l.created_at <  '2025-10-04' 
+        AND l.createdAt >= '${fromDate}' 
+  AND l.createdAt <  '${toDate}' 
         order by l.logId desc`
             );
         }
