@@ -464,21 +464,24 @@ export const VerifyOtpUser = async (req: Request, res: Response) => {
 
 export const superAdminResigteration = async (req: Request, res: Response) => {
     const payload: UserDetailsDto = req.body;
+    if (!payload.cuid) {
+        payload.cuid = payload.userId;
+    }
     try {
         const validationResponse = superAdminValidtion.validate(payload);
         if (validationResponse.error) {
             throw new ValidationException(validationResponse.error?.message);
         }
-        const userRepository = await appSource.getRepository(UserDetails);
+        const userRepository = appSource.getRepository(UserDetails);
         const userDetailFromDb = await userRepository
-            .createQueryBuilder("userDetail")
+            .createQueryBuilder()
             // .where("userDetail.userId = :userId", {
             //     userId: payload.userId,
             // })
             // .orWhere("userDetail.Email = :Email", {
             //     Email: payload.Email,
             // })
-            .where("userDetail.Email = :Email", { Email: payload.Email })
+            .where({ Email: payload.Email })
             .getMany();
         if (userDetailFromDb?.length) {
             throw new ValidationException("User alredy exist");

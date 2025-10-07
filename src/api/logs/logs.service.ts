@@ -23,32 +23,25 @@ export const getLogsReport = async (req: Request, res: Response) => {
         let Details: logsDto[] = [];
         if (+userId > 0) {
             Details = await logsRepository.query(
-                `SELECT 
-    l.logId,
-    l.userId,
-    ud.userName,
-    l.statusCode,
-    l.message,
-    l.createdAt
-FROM [BILLING_SOFTWARE].[dbo].[logs] l
-INNER JOIN [BILLING_SOFTWARE].[dbo].[user_details] ud
-    ON l.userId = ud.userId
-WHERE l.companyId = '${companyId}'              
-  AND l.userId = '${userId}'
-  AND l.createdAt >= '${fromDate}'
-  AND l.createdAt <  '${toDate}'  
-ORDER BY l.logId DESC`
+                `Select l.logId,l.userId,ud.userName,l.statusCode,l.message,l.createdAt, l.companyId
+        from [${process.env.DB_NAME}].[dbo].[logs] l
+        inner join [${process.env.DB_NAME}].[dbo].user_details ud
+        on l.userId = ud.userId
+        where l.companyId = '${companyId}' AND
+        CONVERT(VARCHAR(10),  l.createdAt, 120) >= CONVERT(VARCHAR(10), '${fromDate}', 120)
+        AND CONVERT(VARCHAR(10), l.createdAt, 120) <= CONVERT(VARCHAR(10), '${toDate}', 120)
+        order by l.logId desc`
             );
 
         } else {
             Details = await logsRepository.query(
-                `Select l.logId,l.userId,ud.userName,l.statusCode,l.message,l.createdAt
-        from [BILLING_SOFTWARE].[dbo].[logs] l
-        inner join [BILLING_SOFTWARE].[dbo].user_details ud
+                `Select l.logId,l.userId,ud.userName,l.statusCode,l.message,l.createdAt, l.companyId
+        from [${process.env.DB_NAME}].[dbo].[logs] l
+        inner join [${process.env.DB_NAME}].[dbo].user_details ud
         on l.userId = ud.userId
-        where l.companyId = '${companyId}'
-        AND l.createdAt >= '${fromDate}' 
-  AND l.createdAt <  '${toDate}' 
+        where l.companyId = '${companyId}' AND
+        CONVERT(VARCHAR(10),  l.createdAt, 120) >= CONVERT(VARCHAR(10), '${fromDate}', 120)
+        AND CONVERT(VARCHAR(10), l.createdAt, 120) <= CONVERT(VARCHAR(10), '${toDate}', 120)
         order by l.logId desc`
             );
         }
