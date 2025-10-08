@@ -9,6 +9,7 @@ import { getChangedProperty } from "../../shared/helper";
 import { logsDto } from "../logs/logs.dto";
 import { InsertLog } from "../logs/logs.service";
 import { itemMasterStatusDto } from "../itemMaster/itemMaster.dto";
+import { UserDetails } from "../userRegistration/userRegistration.model";
 
 export const getGroupCategoryId = async (req: Request, res: Response) => {
     try {
@@ -181,7 +182,7 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
     const itemGroupCategoryRepositry =
         appSource.getRepository(ItemGroupCategory);
     const itemsFound = await itemGroupCategoryRepositry.findOneBy({
-        itemGroupId: ItemGroupCategorystatus.itemGroupId,
+        itemGroupId: ItemGroupCategorystatus.userId,
         companyId: ItemGroupCategorystatus.companyId
     });
     try {
@@ -206,6 +207,8 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
         }
         await InsertLog(logsPayload);
 
+        console.log(logsPayload.userId, logsPayload.userName, 'incoming user')
+
         res.status(200).send({
             IsSuccess: `Status for ${itemsFound.groupName} Changed Successfully`,
         });
@@ -227,6 +230,72 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
         res.status(500).send(error);
     }
 };
+
+// export const updateItemGroupCategoryStatus = async (req: Request, res: Response) => {
+//     const ItemGroupCategorystatus: ItemGroupCategoryStatusDto = req.body;
+//     const itemGroupCategoryRepositry = appSource.getRepository(ItemGroupCategory);
+//     const userRepository = appSource.getRepository(UserDetails);
+
+//     try {
+//         const itemsFound = await itemGroupCategoryRepositry.findOneBy({
+//             itemGroupId: ItemGroupCategorystatus.itemGroupId, // FIXED
+//             companyId: ItemGroupCategorystatus.companyId
+//         });
+
+//         if (!itemsFound) {
+//             throw new ValidationException("Item Group / Category Not Found");
+//         }
+
+//         const user = await userRepository.findOneBy({
+//             userId: ItemGroupCategorystatus.userId,
+//             companyId: ItemGroupCategorystatus.companyId
+//         });
+//         const userName = user ? user.userName : 'Unknown User';
+
+//         await itemGroupCategoryRepositry
+//             .createQueryBuilder()
+//             .update(ItemGroupCategory)
+//             .set({ status: ItemGroupCategorystatus.status })
+//             .where({ itemGroupId: ItemGroupCategorystatus.itemGroupId })
+//             .andWhere({ companyId: ItemGroupCategorystatus.companyId })
+//             .execute();
+
+//         const logsPayload: logsDto = {
+//             userId: ItemGroupCategorystatus.userId,
+//             userName: userName,
+//             statusCode: '200',
+//             message: `Item Group/ Categorization Status For ${itemsFound.groupName} changed to ${ItemGroupCategorystatus.status} By ${userName}`,
+//             companyId: ItemGroupCategorystatus.companyId
+//         };
+//         await InsertLog(logsPayload);
+
+//         console.log(logsPayload.userId, logsPayload.userName, 'incoming user');
+
+//         res.status(200).send({
+//             IsSuccess: `Status for ${itemsFound.groupName} Changed Successfully`,
+//         });
+//     } catch (error) {
+//         const user = await userRepository.findOneBy({
+//             userId: ItemGroupCategorystatus.userId,
+//             companyId: ItemGroupCategorystatus.companyId
+//         });
+//         const userName = user ? user.userName : 'Unknown User';
+
+//         const logsPayload: logsDto = {
+//             userId: ItemGroupCategorystatus.userId,
+//             userName: userName,
+//             statusCode: '400',
+//             message: `Error While Updating Item Group / Categorization Status For "${ItemGroupCategorystatus.itemGroupId}" changed to "${ItemGroupCategorystatus.status}" By ${userName}`,
+//             companyId: ItemGroupCategorystatus.companyId
+//         };
+//         await InsertLog(logsPayload);
+
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({ message: error.message });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
 
 export const deleteItemGroupCategory = async (req: Request, res: Response) => {
     const { itemGroupId, companyId, userId } = req.params;

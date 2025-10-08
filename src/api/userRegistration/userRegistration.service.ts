@@ -354,7 +354,7 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
         const Email = req.params.Email;
         const Mobile = req.params.Mobile;
         const userRepository = appSource.getRepository(UserDetails);
-        // check whether user already exist
+        
         const userDetail = await userRepository
             .createQueryBuilder("user")
             .where("user.Mobile = :Mobile", {
@@ -368,14 +368,6 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
 
         const GeneratedOtp = generateOpt();
 
-        // // Save OTP in otpStore table
-        // const otpRepo = appSource.getRepository(otpStore);
-        // const otpRecord  = otpRepo.create({
-        //     userId: userId,
-        //     otp: GeneratedOtp
-        // });
-        // await otpRepo.save(otpRecord );
-
         let response: any;
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -386,7 +378,6 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
                 pass: "unpk bcsy ibhp wzrm",
             },
         });
-        // const Generatedotp = generateOpt();
         response = await transporter.sendMail({
             from: "savedatain@gmail.com",
             to: "savedataakshaya03@gmail.com",
@@ -399,7 +390,6 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
             userId: userId,
             otp: GeneratedOtp
         };
-        // //save otp
         await otpRepo.save(otpTablePayload);
         res.status(200).send({
             IsSuccess: "OTP sent successfully",

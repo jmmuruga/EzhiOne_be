@@ -37,64 +37,6 @@ export const getFinancialYearId = async (req: Request, res: Response) => {
     }
 };
 
-// export const addUpdateFinancialYear = async (req: Request, res: Response) => {
-//     try {
-//         const payload: financialYearCreationDto = req.body;
-
-//         const userId = payload.isEdited
-//             ? payload.muid
-//             : payload.cuid;
-
-//         // Validate payload schema
-//         const validation = financialYearCreationValidation.validate(payload);
-//         if (validation.error) {
-//             throw new ValidationException(validation.error.message);
-//         }
-
-//         const financialYearRepositry = appSource.getRepository(FinancialYearCreation);
-
-//         // Check if record exists
-//         const existingDetails = await financialYearRepositry.findOneBy({
-//             financialYearId: payload.financialYearId,
-//             companyId: payload.companyId
-//         });
-//         if (existingDetails) {
-//             payload.cuid = existingDetails.cuid;
-//             payload.muid = payload.muid || userId;
-//         }
-
-//         if (existingDetails) {
-//             // Update existing record
-//             await financialYearRepositry
-//                 .update({ financialYearId: payload.financialYearId, companyId: payload.companyId }, payload)
-//                 .then(() => {
-//                     res.status(200).send({
-//                         IsSuccess: "Financial Year Details Updated Successfully",
-//                     });
-//                 })
-//                 .catch((error) => {
-//                     res.status(500).send(error);
-//                 });
-//         } else {
-//             payload.cuid = userId;
-//             payload.muid = null;
-
-//             // Add new record
-//             await financialYearRepositry.save(payload);
-//             res.status(200).send({
-//                 IsSuccess: "Financial Year Details Added Successfully",
-//             });
-//         }
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error.message,
-//             });
-//         }
-//         res.status(500).send(error);
-//     }
-// };
-
 export const addUpdateFinancialYear = async (req: Request, res: Response) => {
     const payload: financialYearCreationDto = req.body;
     const userId = payload.isEdited ? payload.muid : payload.cuid;

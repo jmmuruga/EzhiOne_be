@@ -36,66 +36,6 @@ export const createBrandId = async (req: Request, res: Response) => {
     }
 };
 
-// export const addUpdateBrand = async (req: Request, res: Response) => {
-//     try {
-//         const payload: brandDto = req.body;
-
-//         const userId = payload.isEdited
-//             ? payload.muid
-//             : payload.cuid;
-
-//         const validation = brandValidation.validate(payload);
-//         if (validation.error) {
-//             throw new ValidationException(validation.error.message);
-//         }
-
-//         const brandRepositry = appSource.getRepository(Brand);
-//         const existingDetails = await brandRepositry.findOneBy({
-//             brandId: payload.brandId,
-//             companyId: payload.companyId
-//         });
-//         if (existingDetails) {
-//             payload.cuid = existingDetails.cuid;
-//             payload.muid = payload.muid || userId;
-//         }
-
-//         if (existingDetails) {
-//             await brandRepositry
-//                 .update({ brandId: payload.brandId, companyId: payload.companyId }, payload)
-//                 .then(() => {
-//                     res.status(200).send({
-//                         IsSuccess: "Brand Details Updated Successfully",
-//                     });
-//                 })
-//                 .catch((error) => {
-//                     if (error instanceof ValidationException) {
-//                         return res.status(400).send({
-//                             message: error?.message,
-//                         });
-//                     }
-//                     res.status(500).send(error);
-//                 });
-
-//             return;
-//         } else {
-//             payload.cuid = userId;
-//             payload.muid = null;
-
-//             await brandRepositry.save(payload);
-//             res.status(200).send({
-//                 IsSuccess: "Brand Details Added Successfully",
-//             });
-//         }
-//     } catch (error) {
-//         if (error instanceof ValidationException) {
-//             return res.status(400).send({
-//                 message: error?.message,
-//             });
-//         }
-//         res.status(500).send(error);
-//     }
-// };
-
 export const addUpdateBrand = async (req: Request, res: Response) => {
     const payload: brandDto = req.body;
     const companyId = payload.companyId;
@@ -190,7 +130,6 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
         res.status(500).send(error);
     }
 };
-
 
 export const getBrandDetails = async (req: Request, res: Response) => {
     try {
