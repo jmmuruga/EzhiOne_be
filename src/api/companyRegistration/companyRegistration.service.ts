@@ -43,6 +43,7 @@ export const addUpdateCompanyRegistration = async (
     const payload: companyRegistrationDto = req.body;
     const userId = payload.isEdited ? payload.muid : payload.cuid;
     const companyId = payload.companyId;
+    // const userName = (req.body as any).userName || null;
 
     try {
         // Validation
@@ -173,7 +174,7 @@ export const addUpdateCompanyRegistration = async (
             userId: userId,
             userName: null,
             statusCode: '400',
-            message: `Error While Adding/Updating Company Details ${payload.companyName} - ${error.message} By User - `,
+            message: `Error While Adding Company Details ${payload.companyName} - ${error.message} By User - `,
             companyId: companyId
         };
         await InsertLog(logsPayload);

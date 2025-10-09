@@ -296,10 +296,9 @@ export const updateUserStatus = async (req: Request, res: Response) => {
 };
 
 export const deleteUserDetails = async (req: Request, res: Response) => {
-    const { userId, deletedUserId, companyId } = req.params;
+    const { userId, deletedUserId, companyId, deletedUserName } = req.params;
     const userDetailsRepositry = appSource.getRepository(UserDetails);
     const userregisterFound = await userDetailsRepositry.findOneBy({ userId });
-
     try {
 
         if (!userregisterFound) {
@@ -315,7 +314,7 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
             .execute();
         const logsPayload: logsDto = {
             userId: deletedUserId,
-            userName: null,
+            userName: deletedUserName,
             statusCode: "200",
             message: `User Details : ${userregisterFound.userName} Deleted By User -  `,
             companyId: companyId,
@@ -331,6 +330,7 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
+        console.log(error, 'err')
         const logsPayload: logsDto = {
             userId: userId,
             userName: null,
@@ -354,7 +354,7 @@ export const SendOtpNewAdminUser = async (req: Request, res: Response) => {
         const Email = req.params.Email;
         const Mobile = req.params.Mobile;
         const userRepository = appSource.getRepository(UserDetails);
-        
+
         const userDetail = await userRepository
             .createQueryBuilder("user")
             .where("user.Mobile = :Mobile", {
@@ -426,29 +426,61 @@ export const getResgiterUserId = async (req: Request, res: Response) => {
     }
 };
 
+// export const VerifyOtpUser = async (req: Request, res: Response) => {
+//     try {
+//         const { userId, otp } = req.params;
+//         if (!userId || !otp) {
+//             throw new ValidationException("Invalid userId or otp received");
+//         }
+//         const OtpRepo = appSource.getRepository(otpStore);
+//         await OtpRepo
+//             .createQueryBuilder()
+//             .delete()
+//             .from(otpStore)
+//             .where({ userId: userId })
+//             .execute();
+//         res.status(200).send({
+//             IsSuccess: `Otp Verified Successfully...!`,
+//         });
+//     } catch (error) {
+//         if (error instanceof ValidationException) {
+//             return res.status(400).send({
+//                 message: error.message,
+//             });
+//         }
+//         res.status(500).send(error);
+//     }
+// };
+
 export const VerifyOtpUser = async (req: Request, res: Response) => {
     try {
         const { userId, otp } = req.params;
+
         if (!userId || !otp) {
             throw new ValidationException("Invalid userId or otp received");
         }
+
         const OtpRepo = appSource.getRepository(otpStore);
-        await OtpRepo
-            .createQueryBuilder()
-            .delete()
-            .from(otpStore)
-            .where({ userId: userId })
-            .execute();
-        res.status(200).send({
+        const storedOtp = await OtpRepo.findOne({ where: { userId, otp } });
+
+        if (!storedOtp) {
+            throw new ValidationException("Invalid OTP entered!");
+        }
+
+        // If OTP exists, delete it (one-time use)
+        await OtpRepo.delete({ userId });
+
+        return res.status(200).send({
             IsSuccess: `Otp Verified Successfully...!`,
         });
+
     } catch (error) {
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error.message,
             });
         }
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 };
 
@@ -611,6 +643,24 @@ export const signIn = async (req: Request, res: Response) => {
         if (user.password != encryptedPassword) {
             throw new ValidationException("Incorrect Password!");
         }
+
+        const now = new Date().toLocaleTimeString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        })
+        const logsPayload: logsDto = {
+            userId: user.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Session started at ${now} by user - `,
+        }
+        await InsertLog(logsPayload);
 
         res.status(200).send({
             IsSuccess: "Signed In Successfully", Result: user,

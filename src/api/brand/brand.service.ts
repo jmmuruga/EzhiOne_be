@@ -40,7 +40,6 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
     const payload: brandDto = req.body;
     const companyId = payload.companyId;
     const userId = payload.isEdited ? payload.muid : payload.cuid;
-
     try {
         // Validation
         const validation = brandValidation.validate(payload);
@@ -56,7 +55,7 @@ export const addUpdateBrand = async (req: Request, res: Response) => {
 
         if (existingDetails) {
             payload.cuid = existingDetails.cuid;
-            payload.muid = payload.muid || userId;
+            payload.muid = userId;
 
             await brandRepositry
                 .update({ brandId: payload.brandId, companyId: payload.companyId }, payload)
