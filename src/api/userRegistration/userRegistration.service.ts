@@ -2,13 +2,14 @@ import { Request, Response } from "express";
 import { appSource } from "../../core/dataBase/db";
 import { UserDetails } from "./userRegistration.model";
 import { ValidationException } from "../../core/exception";
-import { superAdminPasswordDto, superAdminPasswordValidation, superAdminValidtion, UserDetailsDto, UserDetailsStatusDto, userDetailsValidtion } from "./userRegistration.dto";
+import { signOutDto, superAdminPasswordDto, superAdminPasswordValidation, superAdminValidtion, UserDetailsDto, UserDetailsStatusDto, userDetailsValidtion } from "./userRegistration.dto";
 import { Not } from "typeorm";
 import nodemailer from 'nodemailer';
 import { decrypter, encryptString, generateOpt, getChangedProperty } from "../../shared/helper";
 import { otpStore } from "../otp/otp.model";
 import { InsertLog } from "../logs/logs.service";
 import { logsDto } from "../logs/logs.dto";
+import { companyRegistration } from "../companyRegistration/companyRegistration.model";
 
 export const getUserId = async (req: Request, res: Response) => {
     try {
@@ -628,11 +629,22 @@ export const updatePassword = async (req: Request, res: Response) => {
 };
 
 export const signIn = async (req: Request, res: Response) => {
+    const { EmailorMobile, password } = req.body;
+
+    const encryptedPassword = await encryptString(password, "ABCXY123");
+    const userRepository = appSource.getRepository(UserDetails);
+    let user = await userRepository.findOneBy({ Email: EmailorMobile });
+    const now = new Date().toLocaleTimeString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    })
     try {
-        const { EmailorMobile, password } = req.params;
-        const encryptedPassword = await encryptString(password, "ABCXY123");
-        const userRepository = appSource.getRepository(UserDetails);
-        let user = await userRepository.findOneBy({ Email: EmailorMobile });
         if (!user) {
             user = await userRepository.findOneBy({ Mobile: EmailorMobile });
         }
@@ -644,21 +656,12 @@ export const signIn = async (req: Request, res: Response) => {
             throw new ValidationException("Incorrect Password!");
         }
 
-        const now = new Date().toLocaleTimeString('en-US', {
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: 'numeric',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        })
         const logsPayload: logsDto = {
             userId: user.userId,
             userName: null,
             statusCode: '200',
             message: `Session started at ${now} by user - `,
+            companyId: user.companyId
         }
         await InsertLog(logsPayload);
 
@@ -667,12 +670,70 @@ export const signIn = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+        const logsPayload: logsDto = {
+            userId: user.userId,
+            userName: null,
+            statusCode: '200',
+            message: `Error while starting session - ${error.message} - at ${now} by user - `,
+            companyId: user.companyId
+        }
+        await InsertLog(logsPayload);
+
         if (error instanceof ValidationException) {
             return res.status(400).send({
                 message: error?.message,
             });
         }
         res.status(500).send(error);
+    }
+};
+
+export const signOut = async (req: Request, res: Response) => {
+    const payload: signOutDto = req.body;
+    if (!payload.userId) {
+        return res.status(400).send({ error: "UserId is required to logout" });
+    }
+    try {
+        const now = new Date().toLocaleTimeString("en-US", {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+        });
+        const companyRepositry = appSource.getRepository(companyRegistration);
+        const currentCompany = await companyRepositry.findOneBy({ companyId: payload.companyId })
+        const logsPayload: logsDto = {
+            userId: payload.userId,
+            userName: null,
+            statusCode: "200",
+            message: payload.islogout ? `Session Ended At ${now} By User - ` : `Current Company Changed To ${currentCompany.companyName} At ${now} By User -`,
+            companyId: payload.companyId,
+        };
+        await InsertLog(logsPayload);
+        return res.status(200).send({
+            Result: {
+                message: "Logout Successful",
+                userId: payload.userId,
+            },
+        });
+    } catch (error: any) {
+        const logPayload: logsDto = {
+            userId: payload.userId || null,
+            userName: null,
+            statusCode: "400",
+            message: `Error While Ending The Session - ${error.message} By User - `,
+            companyId: null,
+        };
+        await InsertLog(logPayload);
+        if (error instanceof ValidationException) {
+            return res.status(400).send({ error: error.message });
+        }
+        console.error("Logout Error:", error);
+        return res.status(500).send({ error: "Internal Server Error" });
     }
 };
 

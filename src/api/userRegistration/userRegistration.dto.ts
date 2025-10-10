@@ -30,6 +30,12 @@ export interface UserDetailsStatusDto {
     satusUpdatedUser: string
 }
 
+export interface signOutDto {
+    userId: string;
+    companyId: string;
+    islogout: boolean;
+}
+
 export const userDetailsValidtion = Joi.object({
     userId: Joi.string().required(),
     userName: Joi.string().required(),

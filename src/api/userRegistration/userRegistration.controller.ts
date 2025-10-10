@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addUpdateUserDetails, deleteUserDetails, forgetPasswordSendOtp, getResgiterUserId, getUserDetails, getUserId, resetUserPasswordOtp, SendOtpNewAdminUser, signIn, superAdminResigteration, updatePassword, updateUserStatus, VerifyOtpUser } from "./userRegistration.service";
+import { addUpdateUserDetails, deleteUserDetails, forgetPasswordSendOtp, getResgiterUserId, getUserDetails, getUserId, resetUserPasswordOtp, SendOtpNewAdminUser, signIn, signOut, superAdminResigteration, updatePassword, updateUserStatus, VerifyOtpUser } from "./userRegistration.service";
 
 const userDetailsRouter = Router()
 
@@ -15,7 +15,8 @@ userDetailsRouter.get('/verifyOtpUser/:userId/:otp', (req, res) => { VerifyOtpUs
 userDetailsRouter.post('/superAdminResigteration', (req, res) => { superAdminResigteration(req, res) });
 userDetailsRouter.get('/forgetPasswordSendOtp/:Email', (req, res) => { forgetPasswordSendOtp(req, res) });
 userDetailsRouter.post('/updatePassword', (req, res) => { updatePassword(req, res) });
-userDetailsRouter.get('/signIn/:EmailorMobile/:password', (req, res) => { signIn(req, res) });
+userDetailsRouter.post('/signIn', (req, res) => { signIn(req, res) });
+userDetailsRouter.post('/signOut', (req, res) => { signOut(req, res) });
 userDetailsRouter.get('/resetUserPasswordOtp/:Email', (req, res) => { resetUserPasswordOtp(req, res) })
 
 export default userDetailsRouter;
