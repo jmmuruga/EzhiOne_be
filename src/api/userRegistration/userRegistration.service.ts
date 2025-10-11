@@ -331,7 +331,6 @@ export const deleteUserDetails = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
-        console.log(error, 'err')
         const logsPayload: logsDto = {
             userId: userId,
             userName: null,
@@ -732,7 +731,6 @@ export const signOut = async (req: Request, res: Response) => {
         if (error instanceof ValidationException) {
             return res.status(400).send({ error: error.message });
         }
-        console.error("Logout Error:", error);
         return res.status(500).send({ error: "Internal Server Error" });
     }
 };

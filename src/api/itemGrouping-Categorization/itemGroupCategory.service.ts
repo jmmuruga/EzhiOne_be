@@ -206,9 +206,7 @@ export const updateItemGroupCategoryStatus = async (req: Request, res: Response)
             companyId: ItemGroupCategorystatus.companyId
         }
         await InsertLog(logsPayload);
-
-        console.log(logsPayload.userId, logsPayload.userName, 'incoming user')
-
+        
         res.status(200).send({
             IsSuccess: `Status for ${itemsFound.groupName} Changed Successfully`,
         });

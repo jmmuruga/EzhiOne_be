@@ -42,7 +42,10 @@ export const addUpdateCompanyRegistration = async (
 ) => {
     const payload: companyRegistrationDto = req.body;
     const userId = payload.isEdited ? payload.muid : payload.cuid;
+    // console.log(userId , 'user id')
     const companyId = payload.companyId;
+    // const userName = (req.body as any).userName || null;
+    // const loggedInCompanyId = (req.body as any).loggedInCompanyId || null;
     // const userName = (req.body as any).userName || null;
 
     try {
@@ -101,6 +104,7 @@ export const addUpdateCompanyRegistration = async (
                         message: `Company Details Updated for "${payload.companyName}" - Changes: ${updatedFields} By User - `,
                         companyId: companyId
                     };
+                    // console.log(logsPayload.userId, logsPayload.companyId, logsPayload.userName, 'log data')
                     await InsertLog(logsPayload);
 
                     res.status(200).send({
