@@ -6,7 +6,9 @@ import { companyRegistration } from "./companyRegistration.model";
 import { Request, Response } from "express";
 import { InsertLog } from "../logs/logs.service";
 import { logsDto } from "../logs/logs.dto";
-import { getChangedProperty } from "../../shared/helper";
+import { generateOpt, getChangedProperty } from "../../shared/helper";
+import nodemailer from 'nodemailer';
+import { otpStore } from "../otp/otp.model";
 
 export const getCompanyId = async (req: Request, res: Response) => {
     try {
@@ -310,3 +312,80 @@ export const deleteCompany = async (req: Request, res: Response) => {
         res.status(500).send(error);
     }
 };
+
+export const getOpt = async (req: Request, res: Response) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "savedatain@gmail.com",
+                pass: "unpk bcsy ibhp wzrm",
+            },
+        });
+
+        const GeneratedOtp = generateOpt();
+        console.log("Generated OTP:", GeneratedOtp);
+
+        const mailOptions = {
+            from: "savedatain@gmail.com",
+            to: "savedataakshaya03@gmail.com",
+            subject: "OTP for Company Registration",
+            text: `Please enter the OTP: ${GeneratedOtp} to register your company.`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        const otpRepo = appSource.getRepository(otpStore);
+        const otpTablePayload = { otp: GeneratedOtp };
+        await otpRepo.save(otpTablePayload);
+
+        return res.status(200).json({
+            IsSuccess: `Otp Send Successfully...!`,
+        });
+    } catch (error: any) {
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                message: error,
+            });
+        }
+    }
+};
+
+export const VerifyOtpUser = async (req: Request, res: Response) => {
+    try {
+        const { otp } = req.params;
+        console.log("Received OTP for verification:", otp);
+        if (!otp) {
+            throw new ValidationException("OTP not received");
+        }
+
+        const otpRepo = appSource.getRepository(otpStore);
+        console.log("Verifying OTP:", otp);
+        const storedOtp = await otpRepo.findOne({ where: { otp } });
+        console.log("Stored OTP found:", storedOtp);
+
+        if (!storedOtp) {
+            throw new ValidationException("Invalid OTP entered!");
+        }
+
+        await otpRepo.delete({ otp });
+
+        return res.status(200).send({
+            IsSuccess: `Otp Verified Successfully...!`,
+        });
+
+
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+
+        if (error instanceof ValidationException) {
+            return res.status(400).send({
+                Result: false,
+                Message: error.message,
+            });
+        }
+        res.status(500).send(error.message);
+    }
+};
+
+

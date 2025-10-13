@@ -4,7 +4,7 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 export class otpStore {
     @PrimaryGeneratedColumn()
     id: number
-    @Column()
+    @Column({ nullable: true })
     userId: string
     @Column()
     otp: string
