@@ -8,7 +8,7 @@ companyRegistrationRouter.post('/addUpdateCompanyRegistration', (req, res) => { 
 companyRegistrationRouter.get('/getCompanyDetails', (req, res) => { getCompanyDetails(req, res) });
 companyRegistrationRouter.post('/updateCompanyStatus', (req, res) => { updateCompanyStatus(req, res) });
 companyRegistrationRouter.delete('/deleteCompany/:companyId/:userId', (req, res) => { deleteCompany(req, res) });
-companyRegistrationRouter.get('/getOpt', (req, res) => { getOpt(req, res) });
-companyRegistrationRouter.get('/verifyOtp/:otp', (req, res) => { VerifyOtpUser(req, res); });
+companyRegistrationRouter.post('/getOpt', (req, res) => { getOpt(req, res) });
+companyRegistrationRouter.get('/verifyOtp/:otp/:userId', (req, res) => { VerifyOtpUser(req, res); });
 
 export default companyRegistrationRouter;

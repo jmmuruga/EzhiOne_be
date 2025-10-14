@@ -315,6 +315,7 @@ export const deleteCompany = async (req: Request, res: Response) => {
 
 export const getOpt = async (req: Request, res: Response) => {
     try {
+        const { userId } = req.body;
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -324,7 +325,6 @@ export const getOpt = async (req: Request, res: Response) => {
         });
 
         const GeneratedOtp = generateOpt();
-        console.log("Generated OTP:", GeneratedOtp);
 
         const mailOptions = {
             from: "savedatain@gmail.com",
@@ -336,7 +336,7 @@ export const getOpt = async (req: Request, res: Response) => {
         await transporter.sendMail(mailOptions);
 
         const otpRepo = appSource.getRepository(otpStore);
-        const otpTablePayload = { otp: GeneratedOtp };
+        const otpTablePayload = { otp: GeneratedOtp, userId: userId };
         await otpRepo.save(otpTablePayload);
 
         return res.status(200).json({
@@ -353,22 +353,22 @@ export const getOpt = async (req: Request, res: Response) => {
 
 export const VerifyOtpUser = async (req: Request, res: Response) => {
     try {
-        const { otp } = req.params;
-        console.log("Received OTP for verification:", otp);
+        const { otp, userId } = req.params;
         if (!otp) {
             throw new ValidationException("OTP not received");
         }
 
         const otpRepo = appSource.getRepository(otpStore);
-        console.log("Verifying OTP:", otp);
-        const storedOtp = await otpRepo.findOne({ where: { otp } });
-        console.log("Stored OTP found:", storedOtp);
+
+        const storedOtp = await otpRepo.findOne({
+            where: { otp: otp, userId: userId }
+        });
 
         if (!storedOtp) {
             throw new ValidationException("Invalid OTP entered!");
         }
 
-        await otpRepo.delete({ otp });
+        await otpRepo.delete({ otp, userId });
 
         return res.status(200).send({
             IsSuccess: `Otp Verified Successfully...!`,
@@ -376,7 +376,6 @@ export const VerifyOtpUser = async (req: Request, res: Response) => {
 
 
     } catch (error) {
-        console.error("Error verifying OTP:", error);
 
         if (error instanceof ValidationException) {
             return res.status(400).send({
@@ -387,5 +386,3 @@ export const VerifyOtpUser = async (req: Request, res: Response) => {
         res.status(500).send(error.message);
     }
 };
-
-

@@ -365,14 +365,12 @@ export const VerifyOtp = async (req: Request, res: Response) => {
 
         const otpRepo = appSource.getRepository(otpStore);
 
-        // ✅ Just check if OTP exists in table
         const otpRecord = await otpRepo.findOneBy({ otp: otp });
 
         if (!otpRecord) {
             throw new ValidationException("Invalid or expired OTP");
         }
 
-        // ✅ Delete OTP after verification (one-time use)
         await otpRepo
             .createQueryBuilder()
             .delete()
@@ -392,3 +390,54 @@ export const VerifyOtp = async (req: Request, res: Response) => {
 };
 
 
+export const verifyAddPin = async (req: Request, res: Response) => {
+    try {
+        const { addPin } = req.params;
+        const otpPinRepository = appSource.getRepository(OtpPinSetting);
+
+        const pin = await otpPinRepository.findOne({ where: { addPin: encryptString(addPin, "ABCXY123") } });
+        if (!pin) {
+            throw new ValidationException("Invalid Add Pin Found");
+        }
+
+        const decryptedAddPin = pin.addPin ? decrypter(pin.addPin) : null;
+
+        if (!decryptedAddPin) {
+            return res.status(400).send({ message: 'Add Pin not available.' });
+        }
+
+        if (decryptedAddPin === addPin) {
+            return res.status(200).send({ IsSuccess: 'Add Pin verified successfully.' });
+        }
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+};
+
+export const verifyEditPin = async (req: Request, res: Response) => {
+    try {
+        const { editPin } = req.params;
+        const otpPinRepostory = appSource.getRepository(OtpPinSetting);
+
+        const pin = await otpPinRepostory.findOne({ where: { editPin: encryptString(editPin, "ABCXY123") } });
+        if (!pin) {
+            throw new ValidationException("Invalid Edit Pin Found");
+        };
+
+        const decryptedEditPin = pin.editPin ? decrypter(pin.editPin) : null;
+
+        if (!decryptedEditPin) {
+            return res.status(200).send({ message: 'Edit Pin not available.' });
+        }
+
+        if (decryptedEditPin === editPin) {
+            return res.status(200).send({
+                IsSuccess: 'Edit Pin verified successfully.'
+            })
+        }
+    }
+    catch (error) {
+        res.status(500).send(error)
+    }
+}
