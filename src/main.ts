@@ -21,6 +21,7 @@ import leadsRouter from './api/leads/leads.controller';
 import licenseRouter from './api/licenseSubscription/licenseSubscription.controller';
 import logsRouter from './api/logs/logs.controller';
 import otpRputer from './api/otp/otp.controller';
+import dbSettingsRouter from './api/dataBaseSettings/dbSetting.controller';
 
 const app = express();
 
@@ -50,7 +51,8 @@ app.use('/newCustomerRouter', cors(corsOptions), newCustomerRouter);
 app.use('/leadsRouter', cors(corsOptions), leadsRouter);
 app.use('/licenseRouter', cors(corsOptions), licenseRouter);
 app.use('/logsRouter', cors(corsOptions), logsRouter);
-app.use('/otpRputer', cors(corsOptions), otpRputer)
+app.use('/otpRputer', cors(corsOptions), otpRputer);
+app.use('/dbSettingsRouter', cors(corsOptions), dbSettingsRouter);
 
 app.listen(PORT, () => console.log(`server upon port ${PORT}`));
 
