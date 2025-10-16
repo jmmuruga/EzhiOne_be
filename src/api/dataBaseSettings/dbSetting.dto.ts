@@ -15,6 +15,7 @@ export interface dbSettingsDto {
     cuid?: string;
     muid?: string;
     isEdited?: boolean;
+    companyId: string
 }
 
 export interface dbSettingsStatusDto {
@@ -39,4 +40,5 @@ export const dbSettingsValidation = Joi.object({
     cuid: Joi.string().optional().allow(null, ''),
     muid: Joi.string().optional().allow(null, ''),
     isEdited: Joi.boolean().optional().allow(null, ''),
+    companyId: Joi.string().required()
 })
