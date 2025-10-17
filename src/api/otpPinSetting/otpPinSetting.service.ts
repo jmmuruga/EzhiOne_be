@@ -389,7 +389,6 @@ export const VerifyOtp = async (req: Request, res: Response) => {
     }
 };
 
-
 export const verifyAddPin = async (req: Request, res: Response) => {
     try {
         const { addPin } = req.params;

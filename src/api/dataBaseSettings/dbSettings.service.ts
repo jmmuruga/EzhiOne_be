@@ -79,17 +79,17 @@ export const addUpdatedbSettings = async (req: Request, res: Response) => {
 
 export const getdbSettings = async (req: Request, res: Response) => {
     try {
-        const companyId = req.params.companyId
+        // const companyId = req.params.companyId
         const dbsettingRepo = appSource.getRepository(DbSettings);
         const database = await dbsettingRepo
             .createQueryBuilder("")
-            .where({ companyId: companyId })
+            // .where({ companyId: companyId })
             .getMany();
 
         res.status(200).send({
             Result: database,
         })
-        console.log(database, 'out going')
+        // console.log(database, 'out going')
     }
     catch (error) {
         if (error instanceof ValidationException) {
